@@ -53,3 +53,7 @@ npm run build:pages   # GitHub Pages용 정적 빌드 (dist/)
 ## 공개 배포
 
 [Render 배포 안내](docs/deployment.md)와 `render.yaml`을 제공합니다. main 푸시 시 `.github/workflows/pages.yml`이 검사 후 GitHub Pages에 정적 버전을 배포합니다. 글꼴 출처와 사용 조건은 `public/fonts/NOTICE.txt`에 기록했습니다.
+
+## 작가의 밤 디자인
+
+최신 회차·대회·어워드·갤러리 기능을 유지하면서 밤의 작업실 일러스트, SVG 아이콘, 세이브 슬롯 진입 화면, 반응형 메뉴와 주 마감 도구 모음을 적용했습니다. 다크·라이트 테마를 지원합니다. 스튜디오 이미지는 분위기 일러스트이며 실제 소유 장비·작업실·컨디션은 게임 데이터에 따라 별도로 표시됩니다. 이미지 생성과 WebP 최적화를 사용했고 출처는 `public/assets/README.md`에 기록했습니다.
