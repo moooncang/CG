@@ -1,3 +1,4 @@
+import { pixel } from './pixels.js';
 import * as G from './game.js';
 import * as D from './data.js';
 const $=s=>document.querySelector(s);
@@ -30,8 +31,24 @@ const hue=str=>{let h=0;for(const c of str)h=(h*31+c.charCodeAt(0))%360;return h
 function cover(w,cls=''){const h=hue(w.title);const badge=w.badges?.original?'<em class="bd orig">ORIGINAL</em>':(w.badges?.only&&w.badges.only>=(profile()?.run?.week||0))?'<em class="bd only">ONLY</em>':'';const txt=w.title.replace(/\s.*$/,'').slice(0,4);return `<div class="cover ${cls}" data-h="${h}"><span>${esc(txt)}</span>${badge}${w.audience==='adult'?'<i class="adult" title="성인">19</i>':''}</div>`;}
 function tagsLine(w){return `<span class="chip ${w.visibility==='public'?'pub':''}">${{public:'공개',link:'링크 공개',private:'비공개'}[w.visibility]||'제작 중'}</span><span class="chip">${kName(w.kind)}</span>`;}
 
-const icons={home:'M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10',make:'m14 5 5 5M4 20l4-1L20 7a3 3 0 0 0-4-4L4 15v5Z',works:'M4 4h6v16H4zM14 4h6v16h-6zM4 8h6M14 8h6',rank:'M4 20V12h4v8M10 20V4h4v16M16 20V8h4v12',grow:'m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z',life:'M5 8h12v7a6 6 0 0 1-12 0V8Zm12 1h2a3 3 0 0 1 0 6h-2M8 3v2m5-2v2',record:'M5 3h14v18H5zM9 8h6M9 12h6M9 16h4',arrow:'M5 12h14m-6-6 6 6-6 6',moon:'M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z',plus:'M12 5v14M5 12h14',save:'M5 3h12l4 4v14H3V3h2Zm2 0v7h10V3M7 21v-7h10v7'};
-const ico=(name)=>`<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${icons[name]||icons.grow}"/></svg>`;
+const iconMap={home:'desk',make:'pencil',works:'book',rank:'trophy',grow:'sword',life:'coffee',record:'scroll',arrow:'arrow',moon:'moon',plus:'plus',save:'save'};
+const ico=name=>pixel(iconMap[name]||name,'ui-icon');
+const moduleIcons={profile:'people',prompt:'book',start:'flag',media:'image',keyword:'scroll',shortcut:'bolt',stat:'chart',ending:'trophy',register:'package'};
+function decorateGameControls(){
+ document.querySelectorAll('button[data-act],button[data-page],button[data-register]').forEach(b=>{
+  if(b.querySelector('.pixel-icon')||b.classList.contains('link')||b.closest('.tabs'))return;
+  const a=b.dataset.act?JSON.parse(b.dataset.act):{};
+  const name=a.type==='work'||a.type==='update'?moduleIcons[a.module]:({train:'sword',buy:'package',move:'desk',job:'coin',life:a.id==='nap'?'moon':'coffee',promote:'mail',enter:'trophy',applyOriginal:'star',only:'star',register:'package',sequel:'book',slot:'save'}[a.type]||({make:'pencil',grow:'sword',life:'coffee'}[b.dataset.page])||(b.dataset.register?'package':null));
+  if(!name)return;
+  b.insertAdjacentHTML('afterbegin',pixel(name));b.classList.add('sprite-button');
+  if(a.type==='work')b.classList.add('module-tile');
+ });
+ document.querySelectorAll('.resource').forEach((e,i)=>e.insertAdjacentHTML('afterbegin',pixel(['coin','package','people','star'][i],'resource-sprite')));
+ document.querySelectorAll('.dock-meters>div').forEach((e,i)=>e.querySelector('small')?.insertAdjacentHTML('afterbegin',pixel(['bolt','stress','bulb'][i])));
+ document.querySelectorAll('.trophy').forEach(e=>{const b=e.querySelector('b');if(b){b.textContent=b.textContent.replace(/^[🏆🔒]+\s*/u,'');b.insertAdjacentHTML('afterbegin',pixel(e.classList.contains('on')?'trophy':'lock'));}});
+}
+const eventSymbol=q=>q.kind!=='event'?undefined:/악플|제재|번아웃|논란|신고|불면|불안|오류/.test(q.title)?'warning':/정산|수익|후원|선물|의뢰|알바/.test(q.title)?'coin':/독자|팬|팔로|댓글/.test(q.title)?'heart':/영감|아이디어|소재/.test(q.title)?'bulb':/장비|컴퓨터|작업실/.test(q.title)?'gear':'mail';
+const eventArt=(kind,title,symbol)=>`<div class="pixel-event-art event-${kind}"><span class="pixel-star s1"></span><span class="pixel-star s2"></span><span class="pixel-star s3"></span><div class="event-medallion">${pixel(symbol||{event:'mail',milestone:'bulb',release:'package',contest:'trophy',awards:'star',report:'chart',register:'book'}[kind]||'mail')}</div><span class="event-type">${title}</span></div>`;
 const wordmark=()=>`<span class="brand-symbol">${ico('grow')}</span><span class="wordmark">크랙 작가 키우기<small>제작자 경영 시뮬레이션</small></span>`;
 
 
@@ -44,10 +61,11 @@ function render(){
  else if(!s.run||s.run.ended)html=titleScreen(s);
  else html=playShell(s);
  $('#app').innerHTML=html+modals(s);
+ decorateGameControls();
  document.querySelectorAll('.bar i[data-w]').forEach(i=>{i.style.width=i.dataset.w+'%';});
  document.querySelectorAll('.cover[data-h]').forEach(c=>{const h=Number(c.dataset.h);c.style.background=`linear-gradient(135deg,hsl(${h} 45% 30%),hsl(${(h+40)%360} 55% 14%))`;});
  const entry=$('.title-wrap');if(entry)entry.classList.add('sim-entry');
- const m=$('.modal-back');if(m)m.querySelector('button')?.focus();
+ const m=$('.modal-back');if(m){m.querySelector('button')?.focus({preventScroll:true});const dialog=m.querySelector('.modal');if(dialog)dialog.scrollTop=0;}
 }
 function authScreen(){
  return `<div class="title-wrap"><div class="card"><div class="logo">${wordmark()}</div><h2 class="welcome-title">로그인</h2><p class="lead">일반 제작자에서 크리에이터, 온리, 오리지널까지. 3년 동안 크랙 제작자로 살아남아 보자.</p>
@@ -90,14 +108,14 @@ function studioScene(s,r,dv){
  return `<section class="sim-studio"><img src="./assets/studio-night.webp" alt="작업실 배경"><div class="sim-studio-info"><div class="sim-studio-title"><h2>${esc(r.name)}</h2><span class="chip ${r.stress>=80?'bad':''}">${mood}</span><span class="chip">${dv.repTier}</span></div><div class="sim-facts"><span>작업실 <b>${esc(dv.studio.name)}</b></span><span>제작 슬롯 <b>${r.drafts.length} / ${dv.slots}</b></span><span>공개 작품 <b>${r.works.filter(w=>w.visibility==='public').length}개</b></span><span>주 임대료 <b>${won(dv.studio.rent)}</b></span></div><details class="sim-equipment"><summary>보유 장비 ${r.items.length}개 · 수상 ${r.awards.length+r.stats.contestWins}회</summary><div>${r.items.length?r.items.map(id=>`<span class="chip">${esc(D.ITEMS.find(x=>x.id===id)?.name||id)}</span>`).join(' '):'보유 장비 없음'}</div></details></div><div class="sim-quick"><button class="primary" data-page="make">${ico('plus')} 새 작품</button><button class="secondary" data-page="grow">훈련</button><button class="secondary" data-page="life">휴식·알바</button></div></section>`;
 }
 function feedCard(r,limit=8){
- const icon={rival:'📝',post:'💬',me:'⭐',contest:'📣',notice:'🔔'};
+ const icon={rival:pixel('pencil'),post:pixel('mail'),me:pixel('star'),contest:pixel('trophy'),notice:pixel('mail')};
  return `<section class="card feed"><h2>갤러리 피드</h2><ul class="plain">${r.feed.slice(0,limit).map(f=>`<li class="f-${f.kind}"><span>${icon[f.kind]||'•'}</span><div>${esc(f.text)}<small>${G.calendar(f.week)}</small></div></li>`).join('')||'<li class="fine">아직 소식이 없어요.</li>'}</ul></section>`;
 }
 function contestCard(s,r){
  const c=r.contest;
  if(!c)return `<section class="card contest"><h2>대회</h2><p class="fine">지금은 진행 중인 대회가 없어요. 홀수 달 초에 공모전이 열리고, 2년차부터 11월에 집중 매입 대회가 열려요.</p></section>`;
  const left=c.endWeek-r.week+1;const eligible=r.works.filter(w=>!G.contestEligible(r,c,w)&&!c.entries.includes(w.id));
- return `<section class="card contest"><h2>🏆 ${esc(c.name)} <span class="chip warn">마감 D-${left}주</span></h2><p>${esc(c.desc)}</p><p class="fine">상금 대상 ${won(c.prize[0])} · 최우수 ${won(c.prize[1])} · 우수 ${won(c.prize[2])} · 입선 ${won(c.prize[3])} · 참가 ${c.entries.length}/2</p>
+ return `<section class="card contest"><h2>${pixel('trophy')} ${esc(c.name)} <span class="chip warn">마감 D-${left}주</span></h2><p>${esc(c.desc)}</p><p class="fine">상금 대상 ${won(c.prize[0])} · 최우수 ${won(c.prize[1])} · 우수 ${won(c.prize[2])} · 입선 ${won(c.prize[3])} · 참가 ${c.entries.length}/2</p>
  ${c.entries.length?`<p>참가작: ${c.entries.map(id=>'「'+esc(r.works.find(w=>w.id===id)?.title||'')+'」').join(', ')}</p>`:''}
  <div class="btns">${eligible.slice(0,4).map(w=>`<button class="secondary" ${act({type:'enter',id:w.id})}>「${esc(w.title)}」 참가</button>`).join('')||'<span class="fine">참가 가능한 작품이 없어요. 조건에 맞는 작품을 전체 공개하세요.</span>'}</div></section>`;
 }
@@ -222,11 +240,11 @@ function modals(s){
   if(q.kind==='release')extra=`<div>${statBars(q.stats)}<p class="fine">볼륨 ${q.volume}</p></div>`;
   if(q.kind==='contest')extra=`<ol class="plain">${q.board.map((b,i)=>`<li class="${b.rival?'':'mine'}">${i<3?['🥇','🥈','🥉'][i]:(i+1)+'.'} ${esc(b.title)} <small>${esc(b.author)} · ${b.score}점</small></li>`).join('')}</ol>`;
   if(q.kind==='awards')extra=q.awards.length?`<ul class="plain awards">${q.awards.map(a=>`<li>🏅 <b>${esc(a.name)}</b> — ${esc(a.work)}</li>`).join('')}</ul>`:'';
-  return `<div class="modal-back"><div role="dialog" aria-modal="true" class="modal ${q.kind}"><span class="chip">${{event:'이벤트',milestone:'제작 방향',release:'등록 완료',contest:'대회 결과',awards:'연말 어워드'}[q.kind]}</span><h2>${esc(q.title)}</h2><p>${esc(q.text)}</p>${extra}<div class="options">${q.options.map((o,i)=>`<button class="${i===0?'primary':'secondary'}" ${act({type:'choose',option:i})}>${esc(o.label)}</button>`).join('')}</div></div></div>`;}
- if(modal==='report'&&r?.report){const rep=r.report;const best=rep.rows.length?Math.min(...rep.rows.map(x=>x.rank)):null;const grade=best===null?'':best<=3?'S':best<=10?'A':best<=30?'B':best<=60?'C':'D';return `<div class="modal-back"><div role="dialog" aria-modal="true" class="modal report"><div class="result-head"><div><span class="chip">WEEK RESULT</span><h2>${esc(rep.calendar)}</h2></div>${grade?`<div class="grade g-${grade}">${grade}<small>최고 ${best}위</small></div>`:''}</div><div class="kv"><div><small>발화</small><b>${num(rep.msgs)}</b></div><div><small>신규 플레이</small><b>${num(rep.players)}</b></div><div><small>정산 캐시 +</small><b>${won(rep.cash)}</b></div><div><small>선물 +</small><b>${won(rep.gift)}</b></div><div><small>임대료</small><b>-${won(rep.rent)}</b></div>${rep.salary?`<div><small>월급</small><b>+${won(rep.salary)}</b></div>`:''}<div><small>새 팔로워</small><b>+${num(rep.fans)}</b></div></div>
+  return `<div class="modal-back"><div role="dialog" aria-modal="true" class="modal ${q.kind}">${eventArt(q.kind,{event:'이벤트',milestone:'제작 방향 선택',release:'작품 등록',contest:'대회 결과',awards:'연말 시상식'}[q.kind],eventSymbol(q))}<span class="chip event-label">${{event:'이벤트',milestone:'제작 방향',release:'등록 완료',contest:'대회 결과',awards:'연말 어워드'}[q.kind]}</span><h2>${esc(q.title)}</h2><p>${esc(q.text)}</p>${extra}<div class="options">${q.options.map((o,i)=>`<button class="${i===0?'primary':'secondary'}" ${act({type:'choose',option:i})}><span class="option-index">${i+1}</span><span>${esc(o.label)}</span></button>`).join('')}</div></div></div>`;}
+ if(modal==='report'&&r?.report){const rep=r.report;const best=rep.rows.length?Math.min(...rep.rows.map(x=>x.rank)):null;const grade=best===null?'':best<=3?'S':best<=10?'A':best<=30?'B':best<=60?'C':'D';return `<div class="modal-back"><div role="dialog" aria-modal="true" class="modal report">${eventArt('report','주간 결산')}<div class="result-head"><div><span class="chip">WEEK RESULT</span><h2>${esc(rep.calendar)}</h2></div>${grade?`<div class="grade g-${grade}">${grade}<small>최고 ${best}위</small></div>`:''}</div><div class="kv"><div><small>발화</small><b>${num(rep.msgs)}</b></div><div><small>신규 플레이</small><b>${num(rep.players)}</b></div><div><small>정산 캐시 +</small><b>${won(rep.cash)}</b></div><div><small>선물 +</small><b>${won(rep.gift)}</b></div><div><small>임대료</small><b>-${won(rep.rent)}</b></div>${rep.salary?`<div><small>월급</small><b>+${won(rep.salary)}</b></div>`:''}<div><small>새 팔로워</small><b>+${num(rep.fans)}</b></div></div>
   ${rep.rows.length?`<table class="table"><tr><th>작품</th><th>신규</th><th>재방문</th><th>발화</th><th>크래커</th><th>캐시</th><th>순위</th></tr>${rep.rows.map(x=>`<tr><td>${esc(x.title)}${x.promoted?' 📣':''}${x.tagHits?' #'+x.tagHits:''}</td><td>${num(x.arrivals)}</td><td>${num(x.returning)}</td><td>${num(x.msgs)}</td><td>${num(x.crackers)}</td><td>${num(x.settled+x.gift)}</td><td>${x.rank}위${(()=>{const w=r.works.find(w=>w.id===x.id);return w&&w.prevRank?(w.lastRank<w.prevRank?`<i class="up"> ▲${w.prevRank-w.lastRank}</i>`:w.lastRank>w.prevRank?`<i class="down"> ▼${w.lastRank-w.prevRank}</i>`:''):'';})()}</td></tr>`).join('')}</table>`:'<p class="fine">공개 중인 작품이 없어 집계가 없었어요.</p>'}
   ${rep.events.length?`<ul class="plain">${rep.events.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:''}<h3>주간 TOP 5</h3><ol class="plain">${rep.ranking.slice(0,5).map(b=>`<li class="${b.rival?'':'mine'}">${b.rank}. ${esc(b.title)} <small>${esc(b.author)} · ${num(b.msgs)}</small></li>`).join('')}</ol><div class="options"><button class="primary" data-close>확인</button></div></div></div>`;}
- if(modal?.startsWith('register:')&&r){const d=r.drafts.find(x=>x.id===modal.slice(9));if(!d)return '';const canOrig=d.kind==='story'&&d.origin==='original';return `<div class="modal-back"><div role="dialog" aria-modal="true" class="modal"><span class="chip">등록</span><h2>「${esc(d.title)}」 공개 여부</h2><p>${d.sequelOf?'후속작은 등록 즉시 시리즈 심사(2주)에 들어가요.':'이용자 층과 공개 여부는 나중에 바꿀 수 있지만, 한 번 전체 공개한 작품은 오리지널 심사를 신청할 수 없어요.'}</p><div class="options">
+ if(modal?.startsWith('register:')&&r){const d=r.drafts.find(x=>x.id===modal.slice(9));if(!d)return '';const canOrig=d.kind==='story'&&d.origin==='original';return `<div class="modal-back"><div role="dialog" aria-modal="true" class="modal">${eventArt('register','작품 공개 설정')}<span class="chip event-label">등록</span><h2>「${esc(d.title)}」 공개 여부</h2><p>${d.sequelOf?'후속작은 등록 즉시 시리즈 심사(2주)에 들어가요.':'이용자 층과 공개 여부는 나중에 바꿀 수 있지만, 한 번 전체 공개한 작품은 오리지널 심사를 신청할 수 없어요.'}</p><div class="options">
   <button class="primary" ${act({type:'register',id:d.id,visibility:'public'})}>전체 공개 <small>누구나 플레이 · 신작 탭 노출 · 미션 집계</small></button>
   <button class="secondary" ${act({type:'register',id:d.id,visibility:'link'})}>링크 공개 <small>링크를 가진 사용자만 · 커뮤니티 홍보용${canOrig?' · 오리지널 신청 자격 유지':''}</small></button>
   <button class="secondary" ${act({type:'register',id:d.id,visibility:'private'})}>비공개 <small>나만 플레이${canOrig?' · 오리지널 심사 신청 가능':''}</small></button>
