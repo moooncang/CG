@@ -39,3 +39,9 @@ npm test
 ## 공개 배포
 
 [Render 배포 안내](docs/deployment.md)와 `render.yaml`을 제공합니다. 계정과 진행 기록을 보존하는 유료 영구 디스크 구성입니다. 배포 서비스 로그인과 요금 확인 후 활성화해야 공개 주소가 생성됩니다.
+
+## GitHub Pages
+
+`npm run build:pages`로 `dist/` 정적 버전을 생성합니다. main 푸시 시 `.github/workflows/pages.yml`이 검사 후 GitHub Pages에 배포합니다.
+
+Pages 버전은 회원가입 없는 브라우저 저장 모드입니다. 서버 계정 인증은 제공하지 않으며, 기기·브라우저 간 저장을 공유하지 않습니다. 사이트 데이터 삭제 시 진행 기록도 삭제됩니다. Node 서버 버전의 계정 기능과 데이터는 그대로 유지됩니다.
