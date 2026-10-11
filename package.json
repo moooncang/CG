@@ -1,12 +1,12 @@
 {
-  "name": "creator-quest",
-  "version": "1.0.0",
+  "name": "crack-creator-life",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node --check server.js && node --check game.js && node --check public/app.js",
+    "build": "node --check server.js && node --check game.js && node --check data.js && node --check public/app.js",
     "test": "node --test",
     "build:pages": "node scripts/build-pages.js"
   },
