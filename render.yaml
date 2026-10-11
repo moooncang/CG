@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: creator-quest
+    runtime: node
+    plan: starter
+    buildCommand: npm run build && npm test
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: DATA_DIR
+        value: /var/data/creator-quest
+    disk:
+      name: creator-quest-data
+      mountPath: /var/data
+      sizeGB: 1
