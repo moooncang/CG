@@ -98,3 +98,15 @@ test('세이브 슬롯: 선택·삭제·초기화·이전',()=>{
  actSave(save,{type:'slot',op:'select',slot:0});actSave(save,{type:'slot',op:'reset',confirm:true});assert.ok(save.slots.every(x=>x===null));
  const old=initial();act(old,{type:'newgame',name:'옛날',background:'student',traits:['steel']});assert.equal(migrateSave(JSON.parse(JSON.stringify(old))).slots[0].run.name,'옛날');
 });
+test('대회: 공고·참가 자격·결과·수상, 연말 어워드',()=>{
+ const s=start(13);const r=s.run;
+ for(let i=0;i<5&&!r.contest;i++){clear(s);act(s,{type:'endweek'});}
+ assert.ok(r.contest,'2개월마다 대회 공고');assert.ok(r.feed.some(f=>f.kind==='contest'));
+ clear(s);draft(s,{title:'대회작',kind:'story',tags:r.contest.theme.kind==='tag'?[r.contest.theme.value]:['집착'],genre:r.contest.theme.kind==='genre'?r.contest.theme.value:'romance',target:r.contest.theme.kind==='target'?r.contest.theme.value:'female'});
+ const d=r.drafts[0];finish(s,d);act(s,{type:'register',id:d.id,visibility:'public'});clear(s);const w=r.works[0];
+ const c=r.contest;if(c){if(c.theme.kind==='rookie')r.rep=0;const why=G.contestEligible(r,c,w);assert.equal(why,null,why);act(s,{type:'enter',id:w.id});assert.throws(()=>act(s,{type:'enter',id:w.id}),/이미/);
+  let guard=0;while(r.contest&&guard++<10){clear(s);act(s,{type:'endweek'});}
+  assert.equal(r.contest,null);assert.ok(r.contestHistory.length>=1);const res=r.contestHistory[0];assert.ok(res.mine.length===1);assert.ok(res.board.length===10);assert.ok(r.queue.some(q=>q.kind==='contest'));}
+ r.week=D.WEEKS_PER_YEAR;r.creatorStage=1;while(r.works.length<5){r.works.push({...structuredClone(w),id:'w'+r.works.length});}clear(s);act(s,{type:'endweek'});
+ assert.ok(r.queue.some(q=>q.kind==='awards'),'연말 어워드 모달');assert.ok(r.awards.some(a=>a.name==='신인 크리에이터상'));
+});

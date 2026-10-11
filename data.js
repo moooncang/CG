@@ -95,7 +95,7 @@ export const SKILLS={
 };
 export const BACKGROUNDS=[
  {id:'student',name:'대학생',desc:'시간은 많고 돈은 없다. 체력 110, 90만원.',money:900000,energy:110,legacy:0},
- {id:'worker',name:'직장인 투잡',desc:'매주 월급 +45만원. 대신 체력 75.',money:2200000,energy:75,salary:450000,legacy:0},
+ {id:'worker',name:'직장인 투잡',desc:'매주 월급 +28만원. 대신 체력 70.',money:1500000,energy:70,salary:280000,legacy:0},
  {id:'dreamer',name:'전업 지망생',desc:'모든 것을 걸었다. 160만원, 체력 100.',money:1600000,energy:100,legacy:0},
  {id:'illustrator',name:'프리랜서 일러스트레이터',desc:'이미지 Lv.3, 커미션 비용 절반.',money:1200000,energy:95,skills:{image:3},legacy:0},
  {id:'novelist',name:'전직 웹소설 작가',desc:'기획 Lv.3·프롬프트 Lv.2·팔로워 300. [유산 해금]',money:1400000,energy:95,skills:{planning:3,prompt:2},followers:300,legacy:3},
@@ -171,19 +171,29 @@ export const PROMOS=[
 ];
 // 독자 댓글 풀. 조건: strong/weak 능력치, 타겟, 기타.
 export const COMMENTS={
- story_hi:['서사가 미쳤다... 3시간 순삭','전개가 진짜 소설 한 편 읽은 느낌','설정 하나하나가 다 살아있음','이거 오리지널 가야 되는 거 아님?'],
- story_lo:['뭔가 밍밍해요. 사건이 안 일어남','시작 설정에서 뭘 해야 할지 모르겠어요','캐릭터는 좋은데 이야기가 없음'],
- stability_hi:['말투 안 무너지는 거 진짜 귀함','키워드북 덕분에 설정 안 까먹네','50턴 넘게 했는데 아직도 캐릭터 유지됨'],
- stability_lo:['갑자기 존댓말 하다가 반말함','같은 문장 계속 반복돼요 리롤 지옥','5턴 만에 이름 까먹음 ㅋㅋ','유저노트 없이는 못 하겠다'],
- visual_hi:['상황 이미지 뜰 때마다 소름','썸네일 보고 들어왔는데 안이 더 좋음','이미지 코드 적용 깔끔'],
- visual_lo:['이미지 코드가 안 떠요','프사가 너무 흔한 느낌','상황 이미지 하나만 더 있었으면'],
- appeal_hi:['한 줄 소개에 낚였는데 후회 없음','태그 보고 들어왔는데 정확함','소개글이 작품을 정확히 설명함'],
- appeal_lo:['설명이 너무 짧아서 뭔지 모르고 들어옴','썸네일만 보면 다른 작품인 줄','태그랑 내용이 안 맞아요'],
- female:['설레서 못 자겠음','집착 묘사 미쳤다','다정남 최고...','엔딩 보고 울었어요'],
- male:['스탯 시스템 재밌음','분기 많아서 회차 돌리는 맛','전투 묘사 좋다','육성 요소 더 넣어주세요'],
- adult:['수위 조절 잘됨','세이프티 걸려서 답답함','이거 보고 성인 인증함'],
- generic:['후속작 언제 나와요','작가님 팔로우 박고 갑니다','선물 보냈어요 힘내세요','업데이트 알림 켜둠','친구한테 추천함','퀄 대비 플레이수 너무 적다 더 떠야 함'],
- troll:['이게 왜 인기임?','설정 다 틀렸는데 ㅋㅋ','AI가 쓴 티 남','제작자 갤에서 자추하는 거 다 봄'],
+ story_hi:['서사가 미쳤다... 3시간 순삭','전개가 진짜 소설 한 편 읽은 느낌','설정 하나하나가 다 살아있음','이거 오리지널 가야 되는 거 아님?','분기마다 다른 결말 나오는 거 소름','밤새 돌렸다 책임져라','한 턴 한 턴이 다 떡밥이네','감정선 쌓이는 속도가 완벽함'],
+ story_lo:['뭔가 밍밍해요. 사건이 안 일어남','시작 설정에서 뭘 해야 할지 모르겠어요','캐릭터는 좋은데 이야기가 없음','10턴 지나도 똑같은 장면','선택지가 의미가 없는 느낌','시작 메시지가 너무 길어서 스킵함'],
+ stability_hi:['말투 안 무너지는 거 진짜 귀함','키워드북 덕분에 설정 안 까먹네','50턴 넘게 했는데 아직도 캐릭터 유지됨','유저노트 없이도 설정 유지됨 대박','이름 한 번도 안 틀림','세계관 용어 정확하게 씀'],
+ stability_lo:['갑자기 존댓말 하다가 반말함','같은 문장 계속 반복돼요 리롤 지옥','5턴 만에 이름 까먹음 ㅋㅋ','유저노트 없이는 못 하겠다','내 캐릭터가 갑자기 다른 사람 됨','죽은 캐릭터가 다시 말함...','설정이랑 다르게 행동함'],
+ visual_hi:['상황 이미지 뜰 때마다 소름','썸네일 보고 들어왔는데 안이 더 좋음','이미지 코드 적용 깔끔','표정 차분 미쳤다','배경 이미지까지 있는 거 처음 봄','프사 보고 팔로우'],
+ visual_lo:['이미지 코드가 안 떠요','프사가 너무 흔한 느낌','상황 이미지 하나만 더 있었으면','무료 소재 티 남','썸네일이랑 분위기가 다름'],
+ appeal_hi:['한 줄 소개에 낚였는데 후회 없음','태그 보고 들어왔는데 정확함','소개글이 작품을 정확히 설명함','단축어 편해서 계속 하게 됨','가이드 친절해서 입문하기 좋음'],
+ appeal_lo:['설명이 너무 짧아서 뭔지 모르고 들어옴','썸네일만 보면 다른 작품인 줄','태그랑 내용이 안 맞아요','권장 모드 안내가 없어서 헤맴','단축어 좀 만들어주세요'],
+ female:['설레서 못 자겠음','집착 묘사 미쳤다','다정남 최고...','엔딩 보고 울었어요','이 남주 실존하면 안 되나','고백 장면 캡처해둠','질투하는 거 왜 이렇게 귀엽냐'],
+ male:['스탯 시스템 재밌음','분기 많아서 회차 돌리는 맛','전투 묘사 좋다','육성 요소 더 넣어주세요','난이도 조절 가능하게 해주세요','히든 엔딩 찾는 중','자원 관리 빡센데 그게 재밌음'],
+ adult:['수위 조절 잘됨','세이프티 걸려서 답답함','이거 보고 성인 인증함','묘사가 세련됨','19 치고 서사가 탄탄함'],
+ sim:['세이브 기능 있었으면','스탯 올리는 재미가 있다','랜덤 이벤트 더 늘려주세요','이거 거의 게임임'],
+ narr:['서술이 소설 같아서 좋음','답변이 길어서 크래커가 녹는다...','진행자 톤이 일관됨','TRPG 느낌 제대로'],
+ long:['답변 길어서 몰입됨','5x는 진짜 장편 읽는 기분','길이 대비 내용이 알참','크래커 아껴야 하는데 멈출 수가 없음'],
+ light:['가볍게 하기 좋음','라이트챗으로도 충분히 재밌네','무과금으로 돌리기 딱'],
+ hyper:['하이퍼챗으로 하니까 다른 작품임','비싸지만 그만한 가치 있음','하이퍼 전용 작품 같다'],
+ generic:['후속작 언제 나와요','작가님 팔로우 박고 갑니다','선물 보냈어요 힘내세요','업데이트 알림 켜둠','친구한테 추천함','퀄 대비 플레이수 너무 적다 더 떠야 함','매일 출석 중','이런 작품이 왜 이제 떴지','작가님 다른 작품도 다 함','댓글 처음 달아봄'],
+ update:['업데이트 체감됨 감사합니다','고쳐주셔서 다시 하는 중','패치노트 읽는 재미','업데이트 알림 보고 바로 왔음'],
+ award:['수상 축하드려요!','대회 수상작이라길래 왔는데 납득','심사위원 보는 눈 있네','수상 기념 선물 보냄'],
+ sequel:['후속작 드디어!!','전작 하고 와서 더 재밌음','시리즈로 묶어주세요','전작 세이브 이어지면 좋겠다'],
+ original:['오리지널 배지 달린 거 보고 들어옴','공식 추천에서 봤어요','오리지널 선정 축하합니다','이게 플랫폼이 사간 작품이구나'],
+ troll:['이게 왜 인기임?','설정 다 틀렸는데 ㅋㅋ','AI가 쓴 티 남','제작자 갤에서 자추하는 거 다 봄','이거 어디서 베낀 듯','썸네일 낚시임','돈 벌려고 만든 티 남','프롬 복붙 아님?'],
+ rival:['{rival}: 작가님 작품 잘 봤습니다. 키워드북 구조 참고할게요','{rival}: 같은 장르 하는 입장에서 배웁니다','{rival}: 콜라보 한번 하시죠','{rival}: 이 전개는 제가 먼저 한 건데...'],
 };
 export const RIVAL_ARCHETYPES=[
  {id:'rofan',name:'로판 장인',target:'female',genres:['rofan','romance'],kind:'story',rate:0.10,power:1.1},
@@ -332,6 +342,80 @@ export const EVENTS=[
  {id:'sequel_request',title:'후속작 요청 폭주',text:'"후속작 언제 나와요" 댓글이 100개를 넘었다.',weight:2,need:'hit',options:[
   {label:'후속작을 준비한다',effects:{inspiration:20,stress:5},log:'후속작 기획에 불이 붙었다.'},
   {label:'새 이야기를 쓴다',effects:{inspiration:8},log:'새로운 세계로.'}]},
+ // --- 호재 ---
+ {id:'youtube_review',title:'유튜버가 내 작품을 리뷰했다',text:'구독자 30만 유튜버가 "요즘 하는 캐챗" 영상에서 당신 작품을 소개했다.',weight:1,need:'published',options:[
+  {label:'영상을 공유한다',effects:{reachMod:{mul:2.0,weeks:2},followers:300,rep:60},log:'유튜브 효과로 2주간 유입 ×2.'}]},
+ {id:'whale',title:'큰손 독자',text:'한 독자가 당신 작품에 크래커 1만 개를 선물했다. 메시지: "다음 작품도 기다릴게요."',weight:1,need:'published',options:[
+  {label:'감사 인사를 남긴다',effects:{gift:10000,stress:-10,followers:5},log:'선물 10,000 크래커!'}]},
+ {id:'official_collab',title:'플랫폼 공식 콜라보 제안',text:'운영팀이 시즌 이벤트 공식 캐릭터 제작을 의뢰했다. 제작비와 메인 노출을 준다.',weight:1,need:'creator',options:[
+  {label:'수락 (체력 -40)',effects:{energy:-40,money:2000000,rep:120,followers:200,reachMod:{mul:1.5,weeks:2}},log:'공식 콜라보 제작! 메인 노출.'},
+  {label:'일정상 거절',effects:{rep:5},log:'다음 기회에.'}]},
+ {id:'fancafe',title:'팬카페가 생겼다',text:'독자들이 당신 작품 팬카페를 만들었다. 가입자가 벌써 200명.',weight:1,need:'fans2000',options:[
+  {label:'공식 인증한다',effects:{followers:150,rep:30,stress:-8},log:'팬카페 공식 인증. 든든한 지원군.'}]},
+ {id:'goods',title:'굿즈 제안',text:'굿즈 업체가 당신 캐릭터 아크릴 스탠드를 만들자고 한다. 로열티 계약.',weight:1,need:'rep500',options:[
+  {label:'계약 (+150만원)',effects:{money:1500000,rep:20,followers:60},log:'굿즈 출시! 로열티 입금.'},
+  {label:'거절',effects:{},log:'아직은 이르다.'}]},
+ {id:'overseas_viral',title:'해외 커뮤니티 바이럴',text:'당신 작품 번역 캡처가 해외 커뮤니티에서 화제다. 해외 독자가 몰려온다.',weight:1,need:'only',options:[
+  {label:'영어 소개를 추가한다 (체력 -15)',effects:{energy:-15,followers:250,money:600000,rep:40},log:'해외 유입과 추가 정산.'},
+  {label:'그냥 둔다',effects:{followers:80,money:200000},log:'해외 독자가 조금 늘었다.'}]},
+ {id:'nominated',title:'크랙 크리에이터 어워드 후보',text:'연말 어워드 후보 명단에 당신 이름이 올랐다. 갤러리가 술렁인다.',weight:1,need:'rep500',options:[
+  {label:'영광이다',effects:{rep:50,followers:100,inspiration:15},log:'어워드 후보 지명.'}]},
+ {id:'tax_refund',title:'세금 환급',text:'원천징수된 세금 일부가 환급됐다.',weight:1,need:'rich',options:[
+  {label:'받는다',effects:{money:400000},log:'환급 +40만원.'}]},
+ {id:'algo_boost',title:'추천 알고리즘 개편 (호재)',text:'추천 알고리즘이 바뀌면서 당신 타겟의 작품이 더 많이 노출된다. 4주간 유입 +30%.',weight:1,need:'published',options:[
+  {label:'타이밍 좋다',effects:{reachMod:{mul:1.3,weeks:4}},log:'알고리즘 개편 수혜.'}]},
+ {id:'mentor_offer',title:'멘토링 요청',text:'신인 제작자가 멘토링을 부탁한다. 시간은 들지만 커뮤니티 평판이 오른다.',weight:2,need:'rep300',options:[
+  {label:'도와준다 (체력 -20)',effects:{energy:-20,rep:40,followers:30,skillXp:{community:30}},log:'신인을 도왔다. 갤러리 평판 상승.'},
+  {label:'바빠서 거절',effects:{},log:'미안하다.'}]},
+ // --- 악재 ---
+ {id:'hacked',title:'계정 해킹 시도',text:'누군가 내 계정에 로그인을 시도했다. 2단계 인증을 안 켜뒀다.',weight:1,options:[
+  {label:'보안 설정 (체력 -10)',effects:{energy:-10,stress:5},log:'2단계 인증 설정. 안전.'},
+  {label:'설마 뚫리겠어',effects:{hackRisk:1},log:'...'}]},
+ {id:'prompt_leak',title:'프롬프트 유출',text:'내 작품 프롬프트가 통째로 복사돼 다른 제작자 작품에 쓰였다. 갤러리에 비교 캡처가 올라왔다.',weight:2,need:'published',options:[
+  {label:'운영팀에 신고',effects:{stress:12,rep:15,relationRandom:-30},log:'신고 접수. 해당 작품은 차단됐다.'},
+  {label:'프롬을 더 발전시킨다',effects:{stress:8,inspiration:10,skillXp:{prompt:30}},log:'원조는 계속 앞서간다.'}]},
+ {id:'refund_wave',title:'플랫폼 장애와 환불 사태',text:'결제 장애로 크래커 환불이 대량 발생했다. 이번 달 정산에서 일부가 차감된다.',weight:1,need:'creator',options:[
+  {label:'어쩔 수 없다',effects:{cashPct:-0.15,stress:8},log:'정산 예정액 -15%.'}]},
+ {id:'settle_delay',title:'정산 지연 공지',text:'시스템 점검으로 이번 달 정산이 다음 달로 미뤄진다는 공지.',weight:1,need:'creator',options:[
+  {label:'기다린다',effects:{delaySettle:1,stress:6},log:'이번 달 정산 이월.'}]},
+ {id:'comment_raid',title:'좌표 테러',text:'어딘가에서 좌표가 찍혔다. 악플 수십 개가 한꺼번에 달렸다.',weight:2,need:'published',options:[
+  {label:'하나하나 삭제한다 (체력 -20)',effects:{energy:-20,stress:14},log:'밤새 댓글을 지웠다.'},
+  {label:'댓글을 닫는다',effects:{closeComments:1,stress:6},log:'최신작 댓글 닫음.'},
+  {label:'팬들에게 맡긴다',effects:{stress:10,followers:20,rep:5},log:'팬들이 대신 싸워줬다.'}]},
+ {id:'algo_drop',title:'추천 알고리즘 개편 (악재)',text:'알고리즘 개편으로 기존작 노출이 급감했다. 4주간 유입 -30%.',weight:1,need:'published',options:[
+  {label:'신작으로 돌파한다',effects:{reachMod:{mul:0.7,weeks:4},inspiration:10},log:'4주간 유입 -30%. 신작이 답이다.'}]},
+ {id:'fee_up',title:'플랫폼 수수료 인상',text:'정산 비율은 그대로지만 크래커 환율이 바뀌어 체감 정산이 8주간 10% 줄어든다.',weight:1,need:'creator',options:[
+  {label:'받아들인다',effects:{payMod:{mul:0.9,weeks:8},stress:4},log:'8주간 정산 -10%.'}]},
+ {id:'release_rush',title:'대형 신작 러시',text:'네임드 제작자 셋이 같은 주에 신작을 냈다. 신작 탭이 가득 찼다.',weight:2,options:[
+  {label:'한 주 미룬다',effects:{reachMod:{mul:0.75,weeks:1},inspiration:4},log:'이번 주 유입 -25%.'}]},
+ {id:'usernote_abuse',title:'유저노트 악용',text:'일부 독자가 유저노트로 캐릭터를 설정과 다르게 뒤틀어 캡처를 퍼뜨린다. 작품 이미지가 흔들린다.',weight:2,need:'published',options:[
+  {label:'프롬에 방어 규칙 추가 (체력 -15)',effects:{energy:-15,workPoints:{stability:3},stress:5},log:'방어 규칙 추가.'},
+  {label:'무시한다',effects:{rep:-15,stress:6},log:'인지도 -15.'}]},
+ {id:'review_delay',title:'심사 지연',text:'오리지널 심사가 밀려 결과가 2주 늦어진다는 안내.',weight:2,need:'reviewing',options:[
+  {label:'기다린다',effects:{reviewDelay:2,stress:6},log:'심사 2주 지연.'}]},
+ {id:'false_report',title:'허위 신고',text:'경쟁자로 추정되는 계정이 내 작품을 허위 신고했다. 운영팀 검토 동안 노출이 줄어든다.',weight:1,need:'rep300',options:[
+  {label:'소명한다 (체력 -15)',effects:{energy:-15,reachMod:{mul:0.6,weeks:1},stress:10},log:'소명 완료. 1주 노출 감소.'}]},
+ {id:'theft',title:'노트북 도난',text:'카페에서 잠깐 자리를 비운 사이 노트북이 사라졌다. 백업은... 반쯤.',weight:1,options:[
+  {label:'새로 산다 (-150만원)',effects:{money:-1500000,stress:15,draftPoints:{story:-10,stability:-10}},log:'작업 일부를 잃었다.'},
+  {label:'중고 급구 (-50만원)',effects:{money:-500000,stress:20,progressMod:{mul:0.7,weeks:3},draftPoints:{story:-10,stability:-10}},log:'느린 중고. 3주간 속도 -30%.'}]},
+ {id:'fan_leave',title:'팬 이탈',text:'최근 작품 방향에 실망한 팬들이 "변했다"며 떠난다는 글이 올라왔다.',weight:2,need:'fans1000',options:[
+  {label:'소통 글을 올린다 (체력 -10)',effects:{energy:-10,followers:-40,rep:10},log:'일부는 돌아왔다.'},
+  {label:'내 길을 간다',effects:{followers:-120,inspiration:8},log:'팔로워 -120. 하지만 영감은 올랐다.'}]},
+ {id:'ill',title:'병원 신세',text:'과로로 입원했다. 이번 주는 아무것도 못 한다.',weight:1,need:'stress60',options:[
+  {label:'쉰다',effects:{energy:-100,stress:-30,money:-300000},log:'입원. 체력 소진, 스트레스 -30.'}]},
+ {id:'rival_diss',title:'{rival}의 저격',text:'{rival} 작가가 갤러리에 당신 작품을 돌려 까는 글을 올렸다. "요즘 설정 베끼는 제작자 많네요."',weight:2,need:'rep150',options:[
+  {label:'정면 반박',effects:{stress:15,rep:20,relation:-40,followers:30},log:'설전. 구경꾼이 늘었다.'},
+  {label:'무대응',effects:{stress:6,relation:-15},log:'조용히 넘겼다.'},
+  {label:'DM으로 오해를 푼다',effects:{stress:8,relation:20},log:'알고 보니 오해였다.'}]},
+ {id:'rival_shoutout',title:'{rival}의 추천',text:'{rival} 작가가 자기 팔로워들에게 당신 작품을 추천했다.',weight:2,need:'relationGood',options:[
+  {label:'감사 인사',effects:{followers:180,rep:25,relation:10},log:'팔로워 급증!'}]},
+ {id:'ad_policy',title:'성인 작품 노출 제한 강화',text:'성인 작품의 추천 노출이 제한된다는 정책 변경. 4주간 성인 작품 유입 -40%.',weight:1,need:'hasAdult',options:[
+  {label:'받아들인다',effects:{adultMod:{mul:0.6,weeks:4},stress:5},log:'성인 작품 4주간 노출 -40%.'}]},
+ {id:'bug_week',title:'이미지 코드 버그',text:'플랫폼 버그로 상황 이미지가 한 주 동안 안 뜬다. 비주얼이 강점인 작품이 타격.',weight:2,need:'published',options:[
+  {label:'공지로 안내한다',effects:{workPoints:{visual:-2},stress:4},log:'공개작 비주얼 체감 하락.'}]},
+ {id:'family',title:'가족의 걱정',text:'"그 AI 캐릭터 만드는 거... 돈은 되니?" 명절 식탁이 조용해졌다.',weight:2,need:'poor',options:[
+  {label:'정산 내역을 보여준다',effects:{stress:-8},log:'...숫자를 보여줬다.'},
+  {label:'말을 돌린다',effects:{stress:10},log:'밥만 먹었다.'}]}
 ];
 export const ENDINGS=[
  {id:'original_star',name:'오리지널 간판 작가',desc:'플랫폼이 직접 매입한 당신의 세계관은 공식 콘텐츠가 됐다. 입구에 당신 작품이 걸려 있다.',cond:'originals>=3&&rep>=1500'},
@@ -385,6 +469,9 @@ export const TROPHIES=[
  {id:'endings3',name:'다회차 제작자',desc:'엔딩 3종 수집'},
  {id:'allgenre',name:'장르 올라운더',desc:'7개 장르로 공개'},
  {id:'insights10',name:'독자 분석가',desc:'독자 인사이트 10개 발견'},
+ {id:'contest',name:'입상',desc:'공모전 입상'},
+ {id:'grandprix',name:'대상',desc:'공모전 대상 수상'},
+ {id:'award',name:'어워드 수상',desc:'연말 크리에이터 어워드 수상'},
 ];
 // 회차를 넘어 유지되는 독자 인사이트(발견형 지식)
 export const INSIGHTS=[
@@ -404,3 +491,31 @@ export const INSIGHTS=[
  {id:'ripped_risk',text:'퍼온 이미지는 언젠가 적발된다. 최고 수준 제재는 경고 없이 온다.',cond:'ripped_caught>=1'},
  {id:'fanwork',text:'2차 창작은 팬덤 유입이 크지만 온리·오리지널이 막히고 신고에 취약하다.',cond:'fanwork>=1'},
 ];
+
+export const CONTESTS=[
+ {id:'tag',name:'#{tag} 테마 공모전',desc:'이달의 메타 태그를 주제로. 태그가 포함된 전체 공개 작품만 참가 가능.',prize:[3000000,1500000,500000,100000],rep:[120,70,35,10]},
+ {id:'genre',name:'{genre} 장르 공모전',desc:'지정 장르 작품만 참가 가능.',prize:[3000000,1500000,500000,100000],rep:[120,70,35,10]},
+ {id:'target',name:'{target} 챌린지',desc:'지정 타겟 작품만 참가. 타겟 독자 투표 반영.',prize:[2500000,1200000,400000,100000],rep:[100,60,30,10]},
+ {id:'story',name:'스토리 크리에이터 대전',desc:'스토리 유형만. 볼륨(선택 탭 수)이 심사에 크게 반영.',prize:[5000000,2000000,800000,200000],rep:[160,90,45,15]},
+ {id:'rookie',name:'신인 발굴전',desc:'인지도 300 미만 제작자만. 심사 경쟁이 약하다.',prize:[1500000,800000,300000,100000],rep:[90,50,25,10]},
+ {id:'buyout',name:'오리지널 집중 매입 대회',desc:'오리지널 심사 통과율 가산. 수상작은 즉시 오리지널 선정(구매금 별도).',prize:[30000000,10000000,3000000,500000],rep:[250,150,80,30]},
+];
+export const CONTEST_RANKS=['대상','최우수상','우수상','입선'];
+export const YEAR_AWARDS=[
+ {id:'story',name:'올해의 스토리',pick:'story'},
+ {id:'character',name:'올해의 캐릭터',pick:'character'},
+ {id:'rookie',name:'신인 크리에이터상',pick:'rookie'},
+ {id:'female',name:'여성향 독자 선정',pick:'female'},
+ {id:'male',name:'남성향 독자 선정',pick:'male'},
+ {id:'comments',name:'댓글 폭발상',pick:'comments'},
+ {id:'gift',name:'선물왕',pick:'gift'},
+ {id:'steady',name:'꾸준함상',pick:'steady'},
+];
+export const FEED_TEMPLATES={
+ rival_new:['{rival}님이 신작 「{title}」을(를) 공개했어요','「{title}」 — {rival} · 신작 탭 진입','{rival}: 신작 올렸습니다. 많관부'],
+ rival_only:['{rival}님의 「{title}」이(가) 크랙 온리로 등록됐어요'],
+ rival_original:['🎉 {rival}님의 「{title}」 크랙 오리지널 선정'],
+ rival_post:['{rival}: 요즘 유입이 반토막인데 다들 그런가요?','{rival}: 키워드북 300줄 채우니까 안정성 확 올라감','{rival}: 홍보탭 또 싸움났네 ㅋㅋ','{rival}: 이번 달 메타 태그 #{tag} 미쳤다','{rival}: 하이퍼챗으로 테스트하니까 다른 작품이 됨','{rival}: 정산 들어왔다! 치킨 사먹어야지','{rival}: 심사 결과 기다리는 중... 손 떨림','{rival}: 프롬 공유합니다. 자유롭게 쓰세요','{rival}: 악플 때문에 댓글 닫았습니다','{rival}: 번아웃이라 당분간 쉽니다'],
+ hot:['🔥 「{title}」 반응 뜨거운 신작 진입'],
+ contest_open:['📣 {name} 접수 시작! {desc}'],
+};
