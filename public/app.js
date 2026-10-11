@@ -7,16 +7,17 @@ const act=obj=>`data-act="${esc(JSON.stringify(obj))}"`;
 const MODE=document.documentElement.dataset.mode||'server';
 const LS='crack-creator-v3';
 let local=MODE==='local'||localStorage.getItem('crack-mode')==='local';
-let state=null,username='',page='home',busy=false,modal=null,authMode='login',setupForm={name:'',background:'student',traits:[]},draftForm=null,openWork=null;
+let save=null,username='',page='home',busy=false,modal=null,authMode='login',setupForm={name:'',background:'student',traits:[]},draftForm=null,openWork=null;
 
 // ---------- 저장소 ----------
-function loadLocal(){try{const raw=localStorage.getItem(LS);return raw?G.migrate(JSON.parse(raw)):G.initial();}catch{return G.initial();}}
+const profile=()=>save&&save.current!==null?save.slots[save.current]:null;
+function loadLocal(){try{const raw=localStorage.getItem(LS);return raw?G.migrateSave(JSON.parse(raw)):G.newSave();}catch{return G.newSave();}}
 function saveLocal(s){try{localStorage.setItem(LS,JSON.stringify(s));}catch{toast('브라우저 저장 공간이 부족해 저장하지 못했어요.');}}
-async function apiLoad(){if(local){username='나';return loadLocal();}const r=await fetch('/api/state');if(r.status===401)return null;const j=await r.json();if(!r.ok)throw Error(j.error);username=j.username;delete j.username;return G.migrate(j);}
-async function apiAct(body){if(local){const next=G.act(structuredClone(state),body);saveLocal(next);return next;}const r=await fetch('/api/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error);delete j.username;return G.migrate(j);}
+async function apiLoad(){if(local){username='나';return loadLocal();}const r=await fetch('/api/state');if(r.status===401)return null;const j=await r.json();if(!r.ok)throw Error(j.error);username=j.username;delete j.username;return G.migrateSave(j);}
+async function apiAct(body){if(local){const next=G.actSave(structuredClone(save),body);saveLocal(next);return next;}const r=await fetch('/api/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error);delete j.username;return G.migrateSave(j);}
 async function post(path,body){const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error);return j;}
 function toast(message){const t=$('#toast');t.textContent=message;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3200);}
-async function dispatch(body,after){if(busy)return;busy=true;try{const before=state?.run?.log?.[0];state=await apiAct(body);if(after)after();render();const first=state.run?.log?.[0];if(first&&first!==before&&!['choose','endweek','newgame'].includes(body.type))toast(first.replace(/^\[[^\]]*\]\s*/,''));}catch(e){toast(e.message);}finally{busy=false;}}
+async function dispatch(body,after){if(busy)return;busy=true;try{const before=profile()?.run?.log?.[0];save=await apiAct(body);if(after)after();render();const first=profile()?.run?.log?.[0];if(first&&first!==before&&!['choose','endweek','newgame','slot','theme'].includes(body.type))toast(first.replace(/^\[[^\]]*\]\s*/,''));if(body.type==='theme')toast('테마를 바꿨어요.');}catch(e){toast(e.message);}finally{busy=false;}}
 
 // ---------- 공용 위젯 ----------
 const bar=(v,max=100,cls='')=>`<span class="bar ${cls}"><i data-w="${Math.max(0,Math.min(100,v/max*100)).toFixed(1)}"></i></span>`;
@@ -26,9 +27,10 @@ const statBars=stats=>Object.entries(D.STATS).map(([k,n])=>`<div class="stat"><s
 
 // ---------- 메인 렌더 ----------
 function render(){
- const s=state;document.documentElement.dataset.theme=s?.theme||'violet';
+ const s=profile();document.documentElement.dataset.theme=s?.theme||'violet';
  let html;
- if(!s)html=authScreen();
+ if(!save)html=authScreen();
+ else if(!s)html=slotScreen(save);
  else if(!s.run||s.run.ended)html=titleScreen(s);
  else html=playShell(s);
  $('#app').innerHTML=html+modals(s);
@@ -41,6 +43,13 @@ function authScreen(){
  <form id="auth-form" class="auth"><label>아이디<input name="username" required pattern="[a-zA-Z0-9_]{3,20}" placeholder="영문·숫자·밑줄 3~20자"></label><label>비밀번호<input name="password" type="password" required minlength="8" maxlength="128"></label><button class="primary big">${authMode==='register'?'회원가입하고 시작':'로그인'}</button><button type="button" class="link" data-auth-toggle>${authMode==='register'?'이미 계정이 있어요':'계정 만들기'}</button></form>
  <div class="or">또는</div><button class="secondary big" data-guest>회원가입 없이 이 브라우저에 저장하고 시작</button><p class="fine">브라우저 저장 모드는 이 기기에만 기록이 남습니다. 서버 계정과 동기화되지 않습니다.</p></div></div>`;
 }
+function accountLine(){return `${local?'브라우저 저장 모드':'계정: '+esc(username)} · <button class="link" data-slot-close>세이브 슬롯 선택</button> · <button class="link" data-logout>${local?'계정 모드로 전환':'로그아웃'}</button>`;}
+function slotScreen(save){
+ const cards=save.slots.map((p,i)=>{const sm=G.summarize(p);const summary=!sm?'<small>비어 있음</small>':sm.name?`<small>${esc(sm.name)} · ${sm.ended?'엔딩: '+esc(sm.endingName):esc(sm.calendar)} · 작품 ${sm.works} · 명성 ${num(sm.fame)}</small><small>유산 ${sm.legacy} · 완주 ${sm.runs}회 · 업적 ${sm.trophies}</small>`:`<small>회차 준비 중 · 유산 ${sm.legacy} · 완주 ${sm.runs}회</small>`;
+  return `<div class="slot"><div><b>슬롯 ${i+1}</b>${summary}</div><div class="btns"><button class="primary" ${act({type:'slot',op:'select',slot:i})}>${p?'이어하기':'새로 시작'}</button>${p?`<button class="link danger" data-slot-delete="${i}">삭제</button>`:''}</div></div>`;}).join('');
+ return `<div class="title-wrap"><div class="title-card"><div class="logo">크랙 작가<span>키우기</span><small>SAVE SLOTS</small></div><p class="lead">세이브 슬롯을 고르세요. 슬롯마다 유산·도감·업적이 따로 쌓입니다.</p><div class="slots">${cards}</div>
+ <div class="btns end"><button class="link danger" data-reset-all>모든 슬롯 초기화</button><button class="link" data-logout>${local?'계정 모드로 전환':'로그아웃'}</button></div><p class="fine">${local?'브라우저 저장 모드: 이 기기에만 기록이 남습니다.':'계정: '+esc(username)}</p></div></div>`;
+}
 function titleScreen(s){
  const m=s.meta;const ended=s.run?.ended;
  const endingBlock=ended?`<section class="panel ending"><h2>엔딩 · ${esc(ended.name)}</h2><p>${esc(ended.desc)}</p><div class="ending-grid"><div><small>최종 점수</small><b>${num(ended.score)}</b></div><div><small>획득 유산</small><b>+${ended.legacy}</b></div><div><small>명성</small><b>${num(ended.ctx.fame)}</b></div><div><small>팔로워</small><b>${num(ended.ctx.followers)}</b></div><div><small>작품 / 명예의 전당</small><b>${ended.ctx.works} / ${ended.ctx.hof}</b></div><div><small>코인</small><b>${num(ended.ctx.coins)} C</b></div></div><p class="fine">유산 포인트로 아래에서 새 배경·특성·시작 보너스를 해금하고 다음 회차를 시작하세요.</p></section>`:'';
@@ -52,13 +61,13 @@ function titleScreen(s){
  return `<div class="title-wrap wide"><div class="logo">크랙 작가<span>키우기</span><small>CHARACTER CHAT CREATOR LIFE · ${m.runs.length+1}회차</small></div>${endingBlock}
  <section class="panel"><h2>새 회차 시작</h2><label class="field">작가 이름<input id="setup-name" maxlength="12" value="${esc(setupForm.name)}" placeholder="예: 달빛공방"></label>
  <h3>배경</h3><div class="choices">${bgCards}</div><h3>특성 <small>(${setupForm.traits.length}/${maxTraits})</small></h3><div class="choices">${trCards}</div>
- <div class="start-row"><button class="primary big" data-start>${s.run&&!s.run.ended?'진행 중인 회차를 버리고 새로 시작':'작가 인생 시작!'}</button>${s.run&&!s.run.ended?'<button class="secondary big" data-resume>이어서 하기</button>':''}</div>
+ <div class="start-row"><button class="primary big" data-start>작가 인생 시작!</button></div>
  <p class="fine">시작 보너스: ${['start_coins','start_skill','start_fans','long_career','all_genres','world_format'].filter(k=>G.has(s,k)).map(k=>D.LEGACY_SHOP.find(i=>i.id===k).name).join(', ')||'없음'}</p></section>
  <section class="panel"><h2>유산 상점 <span class="tag">보유 유산 ${m.legacy}</span></h2><p class="fine">회차를 끝내면 점수에 따라 유산을 얻어요. 유산은 회차를 넘어 영구히 쌓입니다.</p><div class="shop">${legacyShop}</div></section>
  <div class="two"><section class="panel"><h2>엔딩 컬렉션 ${m.endings.length}/${D.ENDINGS.length}</h2><ul class="plain">${D.ENDINGS.map(e=>`<li class="${m.endings.includes(e.id)?'':'dim'}">${m.endings.includes(e.id)?'★ '+e.name+' — '+esc(e.desc):'？ ???'}</li>`).join('')}</ul></section>
  <section class="panel"><h2>회차 기록 <span class="tag">최고 ${num(m.best)}</span></h2>${runs}</section></div>
  ${trophyPanel(s)}${comboPanel(s)}
- <p class="fine center">${local?'브라우저 저장 모드':'계정: '+esc(username)+' · <button class="link" data-logout>로그아웃</button>'} · 테마 ${['violet','mint','sunset'].map(t=>`<button class="link" ${act({type:'theme',theme:t})}>${{violet:'라벤더',mint:'민트',sunset:'선셋'}[t]}</button>`).join(' ')}</p></div>`;
+ <p class="fine center">${accountLine()} · 테마 ${['violet','mint','sunset'].map(t=>`<button class="link" ${act({type:'theme',theme:t})}>${{violet:'라벤더',mint:'민트',sunset:'선셋'}[t]}</button>`).join(' ')}</p></div>`;
 }
 function trophyPanel(s){return `<section class="panel"><h2>업적 ${s.meta.trophies.length}/${D.TROPHIES.length}</h2><div class="trophies">${D.TROPHIES.map(t=>`<div class="trophy ${s.meta.trophies.includes(t.id)?'on':''}"><b>${s.meta.trophies.includes(t.id)?'🏆':'🔒'} ${t.name}</b><small>${esc(t.desc)}</small></div>`).join('')}</div></section>`;}
 function comboPanel(s){const c=s.meta.combos;const found=Object.keys(c).length;return `<section class="panel"><h2>궁합 도감 <span class="tag">${found}/${D.GENRES.length*D.SUBJECTS.length} 발견</span></h2><p class="fine">장르×소재 궁합은 작품을 공개해야 밝혀져요. 도감은 회차를 넘어 유지됩니다. ★2 ○1 △0 ▽-1 ✕-2</p><div class="combo-scroll"><table class="combo"><tr><th></th>${D.SUBJECTS.map(x=>`<th>${x.name}</th>`).join('')}</tr>${D.GENRES.map(g=>`<tr><th>${g.name}</th>${D.SUBJECTS.map(x=>{const v=c[g.id+':'+x.id];return `<td class="c${v??'u'}">${v===undefined?'·':{2:'★',1:'○',0:'△','-1':'▽','-2':'✕'}[v]}</td>`;}).join('')}</tr>`).join('')}</table></div></section>`;}
@@ -160,7 +169,7 @@ function recordPage(s,r,dv){
  <div class="btns end"><button class="link danger" ${act({type:'retire'})} ${r.week<D.WEEKS_PER_YEAR?'disabled':''}>조기 은퇴 (엔딩 보기)${r.week<D.WEEKS_PER_YEAR?' · 1년차 이후':''}</button></div></section>
  <section class="panel"><h2>수상 기록</h2>${awards}</section>${trophyPanel(s)}${comboPanel(s)}
  <section class="panel"><h2>작가 일지 전체</h2><ul class="plain log-list">${r.log.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></section>
- <p class="fine center">${local?'브라우저 저장 모드':'계정: '+esc(username)+' · <button class="link" data-logout>로그아웃</button>'} · 테마 ${['violet','mint','sunset'].map(t=>`<button class="link" ${act({type:'theme',theme:t})}>${{violet:'라벤더',mint:'민트',sunset:'선셋'}[t]}</button>`).join(' ')}</p>`;
+ <p class="fine center">${accountLine()} · 테마 ${['violet','mint','sunset'].map(t=>`<button class="link" ${act({type:'theme',theme:t})}>${{violet:'라벤더',mint:'민트',sunset:'선셋'}[t]}</button>`).join(' ')}</p>`;
 }
 
 // ---------- 모달 ----------
@@ -179,21 +188,23 @@ function modals(s){
 // ---------- 이벤트 바인딩 ----------
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button,[data-page]');if(!b)return;
- if(b.dataset.act){const a=JSON.parse(b.dataset.act);if(a.type==='endweek'){dispatch(a,()=>{modal='report';});return;}if(a.type==='retire'&&!confirm('정말 조기 은퇴할까요? 지금까지의 성과로 엔딩이 결정돼요.'))return;if(a.type==='scrap'&&!confirm('초안을 폐기할까요?'))return;dispatch(a);return;}
+ if(b.dataset.act){const a=JSON.parse(b.dataset.act);if(a.type==='slot'){page='home';draftForm=null;openWork=null;}if(a.type==='endweek'){dispatch(a,()=>{modal='report';});return;}if(a.type==='retire'&&!confirm('정말 조기 은퇴할까요? 지금까지의 성과로 엔딩이 결정돼요.'))return;if(a.type==='scrap'&&!confirm('초안을 폐기할까요?'))return;dispatch(a);return;}
  if(b.dataset.page){page=b.dataset.page;modal=null;render();window.scrollTo(0,0);return;}
  if(b.dataset.open!==undefined){openWork=openWork===b.dataset.open?null:b.dataset.open;render();return;}
  if(b.dataset.modal){modal=b.dataset.modal;render();return;}
  if(b.hasAttribute('data-close')){modal=null;render();return;}
  if(b.dataset.bg){setupForm.background=b.dataset.bg;setupForm.name=$('#setup-name')?.value||setupForm.name;render();return;}
- if(b.dataset.trait){const max=G.has(state,'two_traits')?2:1;const t=b.dataset.trait;setupForm.name=$('#setup-name')?.value||setupForm.name;if(setupForm.traits.includes(t))setupForm.traits=setupForm.traits.filter(x=>x!==t);else{setupForm.traits.push(t);if(setupForm.traits.length>max)setupForm.traits.shift();}render();return;}
- if(b.hasAttribute('data-start')){setupForm.name=$('#setup-name')?.value.trim()||'';if(!setupForm.name)return toast('작가 이름을 입력해 주세요.');if(state.run&&!state.run.ended&&!confirm('진행 중인 회차를 버리고 새로 시작할까요?'))return;page='home';draftForm=null;dispatch({type:'newgame',name:setupForm.name,background:setupForm.background,traits:setupForm.traits,confirm:true});return;}
- if(b.hasAttribute('data-resume')){state.run.ended=null;page='home';render();return;}
+ if(b.dataset.trait){const max=G.has(profile(),'two_traits')?2:1;const t=b.dataset.trait;setupForm.name=$('#setup-name')?.value||setupForm.name;if(setupForm.traits.includes(t))setupForm.traits=setupForm.traits.filter(x=>x!==t);else{setupForm.traits.push(t);if(setupForm.traits.length>max)setupForm.traits.shift();}render();return;}
+ if(b.hasAttribute('data-start')){setupForm.name=$('#setup-name')?.value.trim()||'';if(!setupForm.name)return toast('작가 이름을 입력해 주세요.');page='home';draftForm=null;dispatch({type:'newgame',name:setupForm.name,background:setupForm.background,traits:setupForm.traits,confirm:true});return;}
  if(b.hasAttribute('data-auth-toggle')){authMode=authMode==='register'?'login':'register';render();return;}
- if(b.hasAttribute('data-guest')){local=true;localStorage.setItem('crack-mode','local');state=await apiLoad();render();return;}
- if(b.hasAttribute('data-logout')){if(local){localStorage.removeItem('crack-mode');local=MODE==='local';if(local)return;state=null;render();return;}try{await post('logout',{});}catch{}state=null;render();return;}
+ if(b.hasAttribute('data-guest')){local=true;localStorage.setItem('crack-mode','local');save=await apiLoad();render();return;}
+ if(b.hasAttribute('data-slot-close')){page='home';dispatch({type:'slot',op:'close'});return;}
+ if(b.dataset.slotDelete!==undefined){if(!confirm(`슬롯 ${Number(b.dataset.slotDelete)+1}의 모든 기록(유산·도감·업적 포함)을 삭제할까요?`))return;dispatch({type:'slot',op:'delete',slot:Number(b.dataset.slotDelete),confirm:true});return;}
+ if(b.hasAttribute('data-reset-all')){if(!confirm('모든 슬롯을 지우고 처음부터 시작할까요?')||!confirm('정말로요? 되돌릴 수 없어요.'))return;dispatch({type:'slot',op:'reset',confirm:true});return;}
+ if(b.hasAttribute('data-logout')){if(local){localStorage.removeItem('crack-mode');local=MODE==='local';if(local)return;save=null;render();return;}try{await post('logout',{});}catch{}save=null;render();return;}
 });
 document.addEventListener('submit',async e=>{
- if(e.target.id==='auth-form'){e.preventDefault();const fd=new FormData(e.target);try{await post(authMode,{username:fd.get('username'),password:fd.get('password')});state=await apiLoad();render();}catch(err){toast(err.message);}return;}
+ if(e.target.id==='auth-form'){e.preventDefault();const fd=new FormData(e.target);try{await post(authMode,{username:fd.get('username'),password:fd.get('password')});save=await apiLoad();render();}catch(err){toast(err.message);}return;}
  if(e.target.id==='draft-form'){e.preventDefault();const fd=new FormData(e.target);const a={type:'draft',title:fd.get('title'),genre:fd.get('genre'),subject:fd.get('subject'),format:fd.get('format'),cast:Number(fd.get('cast')),scale:fd.get('scale'),focus:fd.get('focus')};dispatch(a,()=>{draftForm=null;});return;}
 });
 document.addEventListener('input',e=>{const f=e.target.closest('#draft-form');if(!f||!draftForm)return;const fd=new FormData(f);draftForm={title:fd.get('title'),genre:fd.get('genre'),subject:fd.get('subject'),format:fd.get('format'),cast:Number(fd.get('cast')),scale:fd.get('scale'),focus:fd.get('focus')};if(e.target.name!=='title')render();});
@@ -201,7 +212,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal){modal=null;r
 
 // ---------- 도트 작업실 ----------
 function drawOffice(){
- const canvas=$('#office');if(!canvas||!state?.run)return;const r=state.run;const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;
+ const canvas=$('#office');const s=profile();if(!canvas||!s?.run)return;const r=s.run;const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;
  const rect=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h);};
  const poly=(pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
  const pal=[['#8ecfc2','#7dbdaf','#d0a879','#ebd4ab'],['#b9c6e6','#a7b5d8','#c9b7a0','#e9dfcc'],['#c9d6b2','#b7c7a0','#d3b58c','#efe2c0'],['#d9c4ea','#c8b0dc','#cfb8a4','#f0e4d4'],['#f0d2b0','#e2c09b','#b3a08a','#e6dbd0']][r.studio];
@@ -217,7 +228,7 @@ function drawOffice(){
  if(r.items.includes('plant')||r.studio>=1)plant(53,156);if(r.studio>=2)plant(420,149);
  const person=(x,y,col,hair)=>{rect(x-5,y+17,5,5,'#514d4e');rect(x+3,y+17,5,5,'#514d4e');rect(x-6,y+3,14,15,col);rect(x-9,y+6,3,8,'#e8b98a');rect(x+8,y+6,3,8,'#e8b98a');rect(x-6,y-9,14,13,'#f5d1a0');rect(x-7,y-12,16,6,hair);rect(x-7,y-7,3,8,hair);rect(x+6,y-7,3,4,hair);rect(x-1,y-3,2,2,'#493d38');rect(x+5,y-3,2,2,'#493d38');rect(x+1,y+1,3,1,'#bc7968');};
  const desk=(x,y,col,hair,on)=>{poly([[x-26,y],[x+3,y-12],[x+34,y+1],[x+4,y+15]],'#876043');poly([[x-26,y-3],[x+3,y-15],[x+34,y-2],[x+4,y+12]],'#c9935c');rect(x-22,y+1,4,18,'#745842');rect(x+27,y+3,4,18,'#745842');rect(x-6,y-25,24,19,'#535c62');rect(x-3,y-22,18,12,on?'#a4d9b7':'#2f3a40');if(on){rect(x,y-20,10,2,'#e1f0c0');rect(x,y-16,13,2,'#5c9d91');}rect(x+4,y-6,4,5,'#6c7474');if(r.items.includes('monitor'))rect(x+14,y-27,12,14,'#535c62');person(x+3,y+18,col,hair);};
- const spots=[[164,118],[258,110],[133,165],[229,159],[320,150]];const dv=G.derive(state);const cols=[['#809bb6','#514249'],['#d18b65','#76513c'],['#a4ad6c','#654735'],['#b89bb5','#494451'],['#c98c9c','#3c3331']];
+ const spots=[[164,118],[258,110],[133,165],[229,159],[320,150]];const dv=G.derive(s);const cols=[['#809bb6','#514249'],['#d18b65','#76513c'],['#a4ad6c','#654735'],['#b89bb5','#494451'],['#c98c9c','#3c3331']];
  for(let i=0;i<Math.min(5,dv.slots);i++)desk(spots[i][0],spots[i][1],cols[i][0],cols[i][1],!!r.drafts[i]);
  if(r.items.includes('cat')){rect(372,189,15,8,'#e7bc7c');rect(382,182,10,10,'#e7bc7c');rect(382,179,3,5,'#b3855d');rect(389,179,3,5,'#b3855d');rect(384,186,2,2,'#4c5545');rect(389,186,2,2,'#4c5545');rect(366,187,7,3,'#e7bc7c');}
  if(r.items.includes('bed')){poly([[325,160],[361,144],[388,155],[352,173]],'#7b9d81');poly([[325,160],[352,173],[352,184],[325,171]],'#547561');poly([[352,173],[388,155],[388,167],[352,184]],'#658e6f');}
@@ -227,4 +238,4 @@ function drawOffice(){
 }
 
 // ---------- 시작 ----------
-(async()=>{try{state=await apiLoad();}catch(e){toast(e.message);}render();})();
+(async()=>{try{save=await apiLoad();}catch(e){toast(e.message);}render();})();

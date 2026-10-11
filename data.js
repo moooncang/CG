@@ -126,7 +126,7 @@ export const LIFE=[
  {id:'read',name:'독서·감상',energy:12,stress:-4,inspiration:22,desc:'다른 작품에서 배운다. 영감 +22'},
  {id:'friends',name:'친구와 수다',energy:12,stress:-22,inspiration:4,desc:'스트레스 -22'},
  {id:'gym',name:'운동',energy:18,stress:-10,inspiration:4,energyMax:1,desc:'스트레스 -10, 가끔 최대 체력 +1'},
- {id:'nap',name:'푹 쉬기',energy:0,stress:-16,inspiration:0,desc:'체력은 안 쓰지만 이번 주 작업 1회분을 날린다 (-20 체력 상한 아님)'},
+ {id:'nap',name:'푹 쉬기',energy:0,stress:-16,inspiration:0,desc:'체력 20을 쉬는 데 쓴다. 스트레스 -16'},
 ];
 export const PROMOS=[
  {id:'sns',name:'SNS 홍보',coins:80,energy:8,mul:1.5,followers:0,desc:'유입 ×1.5'},

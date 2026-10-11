@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {initial,migrate,act,derive,assess,comboValue,scoreOf,data as D} from '../game.js';
+import * as G from '../game.js';
 
 const start=(seed=7,extra={})=>{const s=initial();act(s,{type:'newgame',name:'테스트',background:'dreamer',traits:['muse'],seed,...extra});return s;};
 const clear=s=>{while(s.run.queue.length)act(s,{type:'choose',option:0});};
@@ -73,3 +74,17 @@ test('풀 런: 자동 플레이로 3년 완주하면 엔딩이 나온다',()=>{
  const copy=JSON.parse(JSON.stringify(s));migrate(copy);assert.equal(copy.run.ended.ending,r.ended.ending);
 });
 test('구버전 저장은 새 메타로 이전된다',()=>{const legacy={version:2,theme:'mint',bots:[{id:'old'}],drafts:[]};const s=migrate(legacy);assert.equal(s.version,3);assert.equal(s.theme,'mint');assert.equal(s.meta.legacy,1);assert.equal(s.run,null);});
+test('세이브 슬롯: 선택·삭제·초기화·구버전 이전',()=>{
+ const {newSave,actSave,migrateSave,summarize,SLOT_COUNT}=await_import();
+ const save=newSave();assert.equal(save.current,null);assert.equal(save.slots.length,SLOT_COUNT);
+ assert.throws(()=>actSave(save,{type:'newgame',name:'x',background:'student',traits:['steel']}),/슬롯/);
+ assert.throws(()=>actSave(save,{type:'slot',op:'select',slot:9}),/슬롯/);
+ actSave(save,{type:'slot',op:'select',slot:1});assert.equal(save.current,1);assert.ok(save.slots[1].meta);
+ actSave(save,{type:'newgame',name:'슬롯둘',background:'student',traits:['steel']});assert.equal(save.slots[1].run.name,'슬롯둘');assert.equal(summarize(save.slots[1]).name,'슬롯둘');assert.equal(summarize(save.slots[0]),null);
+ actSave(save,{type:'slot',op:'close'});assert.equal(save.current,null);assert.ok(save.slots[1].run);
+ assert.throws(()=>actSave(save,{type:'slot',op:'delete',slot:1}),/확인/);actSave(save,{type:'slot',op:'delete',slot:1,confirm:true});assert.equal(save.slots[1],null);
+ actSave(save,{type:'slot',op:'select',slot:0});actSave(save,{type:'slot',op:'reset',confirm:true});assert.equal(save.current,null);assert.ok(save.slots.every(x=>x===null));
+ const old=initial();act(old,{type:'newgame',name:'옛날',background:'student',traits:['steel']});const migrated=migrateSave(JSON.parse(JSON.stringify(old)));assert.equal(migrated.current,0);assert.equal(migrated.slots[0].run.name,'옛날');
+ assert.equal(migrateSave({version:2,bots:[{id:'x'}]}).current,0);assert.equal(migrateSave({version:2,bots:[]}).current,null);assert.equal(migrateSave(initial()).current,null);
+});
+function await_import(){return G;}

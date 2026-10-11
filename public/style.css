@@ -77,3 +77,4 @@ label{display:block;font-size:12px;margin-bottom:8px}label input,label select{di
 #toast{position:fixed;left:50%;bottom:76px;transform:translate(-50%,20px);background:#2e2a24;color:#fff;border:3px solid #fff;padding:8px 14px;border-radius:6px;font-size:12px;opacity:0;transition:.25s;z-index:30;max-width:90vw;pointer-events:none}#toast.show{opacity:1;transform:translate(-50%,0)}
 .pages-notice{font-size:11px;color:var(--muted);text-align:center;margin:0 0 10px}
 .loading{padding:40px;text-align:center;color:var(--text)}
+.slots{display:grid;gap:10px;margin:14px 0}.slot{display:flex;justify-content:space-between;align-items:center;gap:10px;border:3px solid var(--border);border-radius:5px;padding:10px 12px;background:var(--panel2)}.slot small{display:block;color:var(--muted);font-size:11px}.slot .btns{margin:0;flex-wrap:nowrap;align-items:center}
