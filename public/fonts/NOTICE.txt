@@ -1,0 +1,5 @@
+DungGeunMo (둥근모꼴)
+Font distribution: https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff
+License reference: https://github.com/fonts-archive/DungGeunMo#라이선스
+Public domain, as described by the font distribution: redistribution, modification and commercial use permitted. Based on 둥근모꼴 and Fixedsys Excelsior.
+The office art in this project is drawn by original canvas code; no Kairosoft art or assets are included.

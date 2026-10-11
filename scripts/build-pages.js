@@ -1,5 +1,6 @@
-import {mkdirSync,readFileSync,writeFileSync,copyFileSync} from 'node:fs';
+import {mkdirSync,readFileSync,writeFileSync,copyFileSync,cpSync} from 'node:fs';
 mkdirSync('dist',{recursive:true});
+cpSync('public/fonts','dist/fonts',{recursive:true});
 for(const file of ['index.html','style.css'])copyFileSync('public/'+file,'dist/'+file);
 writeFileSync('dist/index.html',readFileSync('public/index.html','utf8').replace('href="/style.css"','href="./style.css"').replace('src="/app.js"','src="./app.js"'));
 writeFileSync('dist/game.js',readFileSync('game.js','utf8').replace("import { randomBytes } from 'node:crypto';","const randomBytes = n => ({toString: () => Array.from(crypto.getRandomValues(new Uint8Array(n)), v => v.toString(16).padStart(2, '0')).join('')});"));
@@ -24,7 +25,7 @@ app="import { initial, migrate, act } from './game.js';\n"+app;
 app=app.replace('href="/"','href="./"');
 app=app.replace('<div class="content">','<div class="content"><div class="pages-notice" role="note"><strong>GitHub Pages · 브라우저 저장 모드</strong><span>회원가입 없이 플레이합니다. 기록은 이 브라우저에만 저장되며, 사이트 데이터 삭제 시 사라집니다. 서버 계정과 동기화되지 않습니다.</span></div>');
 app=app.replace("data-action=\"${state?'logout':'auth'}\"",'data-action="local-info"');
-app=app.replace("${state?'로그아웃':'회원가입 / 로그인'}",'이 브라우저에 자동 저장');
+app=app.replaceAll("${state?'로그아웃':'회원가입 / 로그인'}",'자동 저장');
 app=app.replace('const a=b.dataset.action;',"const a=b.dataset.action;if(a==='local-info')toast('브라우저 저장 모드입니다. 서버 계정과 동기화되지 않습니다.');");
 // No password form or misleading authentication controls in the static edition.
 const dialogStart=app.indexOf('<dialog id="auth">'),dialogEnd=app.indexOf('</dialog>',dialogStart);
