@@ -254,8 +254,8 @@ function endWeek(s,dv){
  }
  for(const row of rows)board.push({title:row.title,author:r.name,chats:row.chats,rival:false,id:row.id});
  board.sort((a,b)=>b.chats-a.chats);
- r._fameGiven=false;board.forEach((b,i)=>{if(!b.rival){const row=rows.find(x=>x.id===b.id);row.rank=i+1;const w=r.works.find(w=>w.id===b.id);if(w&&i+1<w.bestRank)w.bestRank=i+1;if(i<10&&!r._fameGiven){r.fame+=[8,6,5,4,3,2,2,1,1,1][i];r._fameGiven=true;}if(i===0){r.stats.weekly1++;trophy(s,'weekly1');}if(i+1<r.stats.bestRank)r.stats.bestRank=i+1;}});
- delete r._fameGiven;r.ranking=board.slice(0,10).map((b,i)=>({rank:i+1,...b}));
+ let fameGiven=false;board.forEach((b,i)=>{if(!b.rival){const row=rows.find(x=>x.id===b.id);row.rank=i+1;const w=r.works.find(w=>w.id===b.id);if(w&&i+1<w.bestRank)w.bestRank=i+1;if(i<10&&!fameGiven){r.fame+=[8,6,5,4,3,2,2,1,1,1][i];fameGiven=true;}if(i===0){r.stats.weekly1++;trophy(s,'weekly1');}if(i+1<r.stats.bestRank)r.stats.bestRank=i+1;}});
+ r.ranking=board.slice(0,10).map((b,i)=>({rank:i+1,...b}));
  // 경제·회복
  const rent=dv.studio.rent;r.coins+=revenue-rent;if(dv.bg.salary)r.coins+=dv.bg.salary;addFollowers(r,fans);
  if(r.studio===4)r.fame+=3;
@@ -334,3 +334,31 @@ function finishRun(s,early){
 function evalCond(cond,c){return cond.split('&&').every(part=>{if(part==='true')return true;const m=part.match(/^(\w+)(>=|<=)(\d+)$/);if(!m)return false;const v=c[m[1]];return m[2]==='>='?v>=+m[3]:v<=+m[3];});}
 
 export const data=D;
+
+// ---------- 세이브 파일(슬롯) ----------
+export const SLOT_COUNT=3;
+export const newSave=()=>({version:4,current:null,slots:Array.from({length:SLOT_COUNT},()=>null)});
+export function migrateSave(raw){
+ if(!raw||typeof raw!=='object')return newSave();
+ if(raw.version===4){raw.slots=Array.from({length:SLOT_COUNT},(_,i)=>raw.slots?.[i]?migrate(raw.slots[i]):null);if(!Number.isInteger(raw.current)||raw.current<0||raw.current>=SLOT_COUNT||!raw.slots[raw.current])raw.current=null;return raw;}
+ const save=newSave();const profile=migrate(raw);if(profile.run||profile.meta.runs.length||profile.meta.legacy){save.slots[0]=profile;save.current=0;}return save;
+}
+export function summarize(profile){
+ if(!profile)return null;const r=profile.run;const m=profile.meta;
+ return {name:r?.name||null,calendar:r?calendar(Math.min(r.week,r.careerWeeks)):null,ended:!!r?.ended,endingName:r?.ended?.name||null,works:r?.works.length||0,fame:r?.fame||0,legacy:m.legacy,runs:m.runs.length,trophies:m.trophies.length,theme:profile.theme};
+}
+export function actSave(save,a){
+ migrateSave(save);if(!a||typeof a!=='object')throw Error('잘못된 요청이에요.');
+ if(a.type==='slot'){
+  const i=Number(a.slot);const valid=Number.isInteger(i)&&i>=0&&i<SLOT_COUNT;
+  switch(a.op){
+   case 'select':if(!valid)throw Error('잘못된 슬롯이에요.');save.slots[i]??=initial();save.current=i;return save;
+   case 'close':save.current=null;return save;
+   case 'delete':if(!valid)throw Error('잘못된 슬롯이에요.');if(!a.confirm)throw Error('삭제 확인이 필요해요.');save.slots[i]=null;if(save.current===i)save.current=null;return save;
+   case 'reset':if(!a.confirm)throw Error('초기화 확인이 필요해요.');{const fresh=newSave();save.current=fresh.current;save.slots=fresh.slots;return save;}
+   default:throw Error('알 수 없는 슬롯 작업이에요.');
+  }
+ }
+ if(save.current===null)throw Error('먼저 세이브 슬롯을 선택해 주세요.');
+ save.slots[save.current]=act(save.slots[save.current],a);return save;
+}
