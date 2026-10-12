@@ -9,6 +9,14 @@ export const GIFT_RATE={creator:0.9,normal:0.7};
 export const CASHOUT_MIN=10000;
 export const CREATOR_REQ={works:10,players:1000,followers:500,messages:100000};
 
+// 보통은 기존 수치 그대로. 비용·품질·목표는 유지하고 운영 여유와 경쟁 강도를 조절한다.
+export const DIFFICULTIES=[
+ {id:'easy',name:'쉬움',symbol:'heart',desc:'제작과 성장에 집중',startMoney:1.4,energy:15,stress:0.8,reach:1.2,rival:0.85},
+ {id:'normal',name:'보통',symbol:'book',desc:'기존 게임의 기준 난이도',startMoney:1,energy:0,stress:1,reach:1,rival:1},
+ {id:'hard',name:'어려움',symbol:'sword',desc:'자금과 휴식 계획이 중요',startMoney:0.85,energy:-5,stress:1.25,reach:0.9,rival:1.15},
+ {id:'legend',name:'레전드',symbol:'trophy',desc:'적은 여유, 치열한 순위 경쟁',startMoney:0.7,energy:-10,stress:1.5,reach:0.8,rival:1.3},
+];
+
 export const TARGETS=[
  {id:'female',name:'여성향',desc:'관계·감정선·서사 중심. 로맨스/로판/드라마 선호.',pool:1.0},
  {id:'male',name:'남성향',desc:'시뮬·육성·세계관·액션 선호. 분량과 시스템을 본다.',pool:0.9},
