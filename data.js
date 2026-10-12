@@ -9,12 +9,12 @@ export const GIFT_RATE={creator:0.9,normal:0.7};
 export const CASHOUT_MIN=10000;
 export const CREATOR_REQ={works:10,players:1000,followers:500,messages:100000};
 
-// 보통은 기존 수치 그대로. 비용·품질·목표는 유지하고 운영 여유와 경쟁 강도를 조절한다.
+// 보통은 기존 수치 그대로. 운영 여유, 제작 스탯 성장과 공모전 경쟁 강도를 조절한다.
 export const DIFFICULTIES=[
- {id:'easy',name:'쉬움',symbol:'heart',desc:'제작과 성장에 집중',startMoney:1.4,energy:15,stress:0.8,reach:1.2,rival:0.85},
- {id:'normal',name:'보통',symbol:'book',desc:'기존 게임의 기준 난이도',startMoney:1,energy:0,stress:1,reach:1,rival:1},
- {id:'hard',name:'어려움',symbol:'sword',desc:'자금과 휴식 계획이 중요',startMoney:0.85,energy:-5,stress:1.25,reach:0.9,rival:1.15},
- {id:'legend',name:'레전드',symbol:'trophy',desc:'적은 여유, 치열한 순위 경쟁',startMoney:0.7,energy:-10,stress:1.5,reach:0.8,rival:1.3},
+ {id:'easy',name:'쉬움',symbol:'heart',desc:'제작과 성장에 집중',startMoney:1.4,energy:15,stress:0.8,reach:1.2,rival:0.85,stats:1.2,contest:0.9},
+ {id:'normal',name:'보통',symbol:'book',desc:'기존 게임의 기준 난이도',startMoney:1,energy:0,stress:1,reach:1,rival:1,stats:1,contest:1},
+ {id:'hard',name:'어려움',symbol:'sword',desc:'자금과 휴식 계획이 중요',startMoney:0.85,energy:-5,stress:1.25,reach:0.9,rival:1.15,stats:0.9,contest:1.08},
+ {id:'legend',name:'레전드',symbol:'trophy',desc:'적은 여유, 치열한 순위 경쟁',startMoney:0.7,energy:-10,stress:1.5,reach:0.8,rival:1.3,stats:0.8,contest:1.16},
 ];
 
 export const TARGETS=[
@@ -225,6 +225,32 @@ export const TITLE_PARTS={
  worlds:['아포칼립스','던전','황궁','기숙사','우주정거장','폐광','마법학교','뒷골목','요양원','섬'],
 };
 export const EVENTS=[
+ // 난이도 전용: 6주차부터 12주 간격으로 순환. 일반 랜덤 풀과 분리한다.
+ {id:'easy_mentor',difficulty:'easy',symbol:'bulb',title:'신인 멘토링 지원',text:'멘토가 다음 제작을 도와주겠다고 한다. 필요한 지원을 선택하자.',options:[
+  {label:'제작 코칭 · 2주간 작업 속도 +15%, 기획 경험치 +20',effects:{progressMod:{mul:1.15,weeks:2},skillXp:{planning:20}},log:'제작 코칭을 받았다.'},
+  {label:'운영 지원 · 자금 +12만원',effects:{money:120000},log:'운영 지원금을 받았다.'}]},
+ {id:'easy_feedback',difficulty:'easy',symbol:'heart',title:'독자 응원 모임',text:'작은 독자 모임에서 응원이 도착했다. 다음 작품을 준비할 여유가 생겼다.',options:[
+  {label:'아이디어 나누기 · 영감 +18, 팔로워 +15',effects:{inspiration:18,followers:15},log:'독자들과 아이디어를 나눴다.'},
+  {label:'재충전 · 스트레스 -18',effects:{stress:-18},log:'응원을 받고 쉬었다.'}]},
+ {id:'normal_study',difficulty:'normal',symbol:'book',title:'제작 스터디 모집',text:'제작자들이 소규모 스터디를 연다. 이번에 배울 주제를 정하자.',options:[
+  {label:'프롬프트 연구 · 프롬프트 경험치 +16',effects:{skillXp:{prompt:16}},log:'프롬프트 작성법을 교환했다.'},
+  {label:'장르 분석 · 기획 경험치 +16',effects:{skillXp:{planning:16}},log:'장르별 전개를 분석했다.'}]},
+ {id:'normal_exchange',difficulty:'normal',symbol:'mail',title:'제작자 교류회',text:'동료 제작자들이 홍보 경험과 휴식 방법을 공유하고 있다.',options:[
+  {label:'홍보 사례 듣기 · 2주간 신규 노출 +10%',effects:{reachMod:{mul:1.1,weeks:2}},log:'홍보 사례를 적용했다.'},
+  {label:'동료와 쉬기 · 스트레스 -8, 영감 +8',effects:{stress:-8,inspiration:8},log:'동료와 재충전했다.'}]},
+ {id:'hard_rush',difficulty:'hard',symbol:'warning',title:'인기 장르 신작 경쟁',text:'인기 장르에 경쟁작이 몰렸다. 짧게 집중 홍보하거나 다음 제작을 준비할 수 있다.',options:[
+  {label:'홍보 집중 · 2주간 신규 노출 +20%, 스트레스 +10',effects:{reachMod:{mul:1.2,weeks:2},stress:8},log:'경쟁 속에서 홍보에 집중했다.'},
+  {label:'다음 기획 준비 · 영감 +12, 2주간 신규 노출 -10%',effects:{inspiration:12,reachMod:{mul:0.9,weeks:2}},log:'현재 유입을 양보하고 기획을 준비했다.'}]},
+ {id:'hard_review',difficulty:'hard',symbol:'scroll',title:'까다로운 합평회',text:'동료들이 개선점을 조목조목 지적한다. 피드백을 받아들이는 데에도 여유가 필요하다.',options:[
+  {label:'분석하기 · 프롬프트 경험치 +30, 스트레스 +10',effects:{skillXp:{prompt:30},stress:8},log:'합평을 분석해 역량을 키웠다.'},
+  {label:'일정 조정 · 스트레스 -10, 1주간 작업 속도 -10%',effects:{stress:-10,progressMod:{mul:0.9,weeks:1}},log:'제작 속도를 낮추고 컨디션을 회복했다.'}]},
+ {id:'legend_challenge',difficulty:'legend',symbol:'trophy',title:'상위권 제작자 공개 도전',text:'상위권 제작자들이 공개 제작 챌린지를 연다. 단기 노출 기회지만 부담도 크다.',options:[
+  {label:'참가 · 2주간 신규 노출 +25%, 스트레스 +18',effects:{reachMod:{mul:1.25,weeks:2},stress:12},log:'상위권 챌린지에 참가했다.'},
+  {label:'내 작업에 집중 · 영감 +14, 2주간 신규 노출 -15%',effects:{inspiration:14,reachMod:{mul:0.85,weeks:2}},log:'노출 경쟁 대신 다음 기획을 준비했다.'}]},
+ {id:'legend_precision',difficulty:'legend',symbol:'gear',title:'고난도 프롬프트 검증',text:'복잡한 프롬프트의 검증 기회가 생겼다. 집중 연구와 안정적인 일정 사이에서 선택하자.',options:[
+  {label:'집중 연구 · 프롬프트 경험치 +40, 스트레스 +18',effects:{skillXp:{prompt:40},stress:12},log:'집중 연구로 프롬프트 경험을 쌓았다.'},
+  {label:'작업량 축소 · 스트레스 -12, 2주간 작업 속도 -10%',effects:{stress:-12,progressMod:{mul:0.9,weeks:2}},log:'작업량을 줄여 컨디션을 관리했다.'}]},
+
  // --- 플랫폼·정책 ---
  {id:'policy_revision',title:'운영 정책 개정 안내',text:'캐릭터 생성 정책이 구체화됐다. 프로필·상황 이미지·프롬프트의 금지 항목이 명시되고, 퍼온 이미지 작품은 집중 점검 대상이다.',weight:2,options:[
   {label:'내 작품을 점검한다 (체력 -15)',effects:{energy:-15,riskAll:-2,stress:4},log:'작품을 점검해 위험 요소를 줄였다.'},

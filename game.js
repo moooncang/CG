@@ -43,7 +43,7 @@ export function derive(s){
  const costMul=t('thrifty')?0.85:1;
  const genres=D.GENRES.filter(g=>has(s,'all_genres')||g.unlock<=r.skills.planning);
  const statMul={story:1+sum('storyMul'),stability:1+sum('stabilityMul')+(t('lorekeeper')?0.2:0),visual:1+sum('visualMul')+(t('visualist')?0.25:0)+(r.subs.includes('imagegen')?0.15:0),appeal:1+sum('appealMul')};
- const pointMul=(t('perfectionist')?1.15:1)*(t('prolific')?0.92:1);
+ const pointMul=difficulty.stats*(t('perfectionist')?1.15:1)*(t('prolific')?0.92:1);
  const progressMul=(t('perfectionist')?0.85:1)*(t('prolific')?1.2:1)*modMul(r,'progress');
  const trainCost=sk=>R(80000*Math.pow(r.skills[sk],1.5)*costMul);
  const helperMul=(r.studio>=3?0.8:1)*costMul*(bg.id==='illustrator'?0.5:1);
@@ -232,7 +232,7 @@ function register(s,a,dv){
 function choose(s,a){
  const r=s.run;const q=r.queue[0];if(!q)throw Error('고를 선택지가 없어요.');const i=Number(a.option);if(!Number.isInteger(i)||i<0||i>=q.options.length)throw Error('잘못된 선택이에요.');
  r.queue.shift();
- if(q.kind==='milestone'){const d=r.drafts.find(d=>d.id===q.draftId);const o=MILESTONES[q.module][i];if(d){for(const [k,v] of Object.entries(o.effects)){if(k==='money')r.money+=v;else d.points[k]+=v;}log(r,`「${d.title}」 ${o.label}: ${o.log}`);}}
+ if(q.kind==='milestone'){const d=r.drafts.find(d=>d.id===q.draftId);const o=MILESTONES[q.module][i];if(d){for(const [k,v] of Object.entries(o.effects)){if(k==='money')r.money+=v;else d.points[k]+=v>0?R(v*difficultyOf(r).stats*10)/10:v;}log(r,`「${d.title}」 ${o.label}: ${o.log}`);}}
  else if(q.kind==='event'){const ev=byId(D.EVENTS,q.eventId);if(ev){const o=ev.options[i];applyEffects(s,o.effects,q);log(r,`${q.title} → ${o.label}. ${o.log}`);}}
  return s;
 }
@@ -361,6 +361,8 @@ function endWeek(s,dv){
  if(weekOfMonth(r.week)===1&&r.week>1){let fee=0;for(const id of r.subs)fee+=byId(D.SUBSCRIPTIONS,id).monthly;if(fee){r.money-=R(fee*dv.costMul);r.report.events.push(`구독료 ${R(fee*dv.costMul).toLocaleString('ko-KR')}원 결제`);}r.trend=r.nextTrend;r.nextTrend=rollTrend(r);}
  if(burnout){r.queue.push({kind:'event',eventId:'__burnout',title:'번아웃',text:'몸과 마음이 멈췄다. 이번 주는 절반의 체력으로 시작한다. 쉬어가자.',options:[{label:'...쉬자'}]});r.report.events.push('번아웃! 체력 절반으로 시작');}
  if(rng(r)<0.5){const ev=rollEvent(s);if(ev){const rv=ev.need==='relationGood'?(r.rivals.find(x=>x.relation>=30)||pick(r,r.rivals)):pick(r,r.rivals);const tier=r.rep>=1200?'상위권':r.rep>=300?'중위권':'"기타"';r.queue.push({kind:'event',eventId:ev.id,rivalId:rv.id,title:ev.title.replace('{rival}',rv.name),text:ev.text.replace('{rival}',rv.name).replace('{tier}',tier),options:ev.options.map(o=>({label:o.label}))});if(ev.once)(r.flags.seen??=[]).push(ev.id);}}
+ // 난이도 이벤트는 일반 이벤트와 별도로 분기마다 1회. 새 주에 적용하여 기간을 온전히 보장한다.
+ if(r.week<=r.careerWeeks&&r.week%12===6){const pool=D.EVENTS.filter(e=>e.difficulty===difficultyOf(r).id);const ev=pool[Math.floor((r.week-6)/12)%pool.length];if(ev)r.queue.push({kind:'event',eventId:ev.id,difficulty:ev.difficulty,symbol:ev.symbol,title:ev.title,text:ev.text+(ev.options.some(o=>o.effects.stress>0)?' 스트레스 표시는 난이도 반영값이며, 강철 멘탈 특성이 있으면 더 줄어듭니다.':''),options:ev.options.map(o=>({label:o.label}))});}
  r.energy=burnout?R(dv.energyMax/2):dv.energyMax;if(r.flags.energyPenalty){r.energy=Math.max(10,r.energy-r.flags.energyPenalty);delete r.flags.energyPenalty;}
  r.weekActions={promos:{},jobs:{},nap:false,updates:{}};
  if(r.week-1>=8)insight(s,'creator_gate');if((r.stats.counters.gallery||0)>=3)insight(s,'gallery_adult');if((r.stats.counters.tagmeta||0)>=1)insight(s,'tags_meta');if((r.stats.counters.updates||0)>=3)insight(s,'fresh_update');if((r.stats.counters.adult||0)>=1&&r.works.some(w=>w.audience==='adult'&&w.plays>0))insight(s,'adult_pay');if((r.stats.counters.length3||0)>=1)insight(s,'length_tradeoff');if((r.stats.counters.target_female||0)>=2)insight(s,'female_story');if((r.stats.counters.target_male||0)>=2)insight(s,'male_sim');
@@ -390,7 +392,7 @@ function resolveReview(s,w){
 function rollEvent(s){
  const r=s.run;const lucky=r.traits.includes('lucky');const pub=r.works.filter(w=>w.visibility==='public'&&w.status==='active');
  const ok=e=>{if(e.once&&(r.flags.seen||[]).includes(e.id))return false;switch(e.need){case undefined:return true;case 'published':return pub.length>0;case 'published_all':return pub.some(w=>w.audience==='all');case 'stress60':return r.stress>=60;case 'stress50':return r.stress>=50;case 'rep150':return r.rep>=150;case 'rep300':return r.rep>=300;case 'rep800':return r.rep>=800&&!r.flags.publisher;case 'fans500':return r.followers>=500;case 'fans1000':return r.followers>=1000;case 'fans2000':return r.followers>=2000;case 'rich':return r.settledTotal>=5000000;case 'cat':return r.items.includes('cat');case 'creator':return r.creatorStage>=2;case 'only':return pub.some(w=>w.badges.only&&w.badges.only>=r.week);case 'fanwork':return pub.some(w=>w.origin==='fanwork');case 'ripped':return pub.some(w=>w.imageSource==='ripped');case 'hit':return pub.some(w=>w.messages>50000);case 'rep500':return r.rep>=500;case 'reviewing':return r.works.some(w=>w.originalReview);case 'relationGood':return r.rivals.some(x=>x.relation>=30);case 'hasAdult':return pub.some(w=>w.audience==='adult');case 'poor':return r.money<300000;default:return false;}};
- const pool=D.EVENTS.filter(ok);if(!pool.length)return null;
+ const pool=D.EVENTS.filter(e=>!e.difficulty&&ok(e));if(!pool.length)return null;
  const bad=new Set(['troll','price_up','maintenance','laptop','plagiarism','model_update','cold','censorship_drama','status_changed','tax','gallery_rank','hacked','prompt_leak','refund_wave','settle_delay','comment_raid','algo_drop','fee_up','release_rush','usernote_abuse','review_delay','false_report','theft','fan_leave','ill','rival_diss','ad_policy','bug_week']);
  const weights=pool.map(e=>e.weight*(lucky&&bad.has(e.id)?0.5:1));const total=weights.reduce((a,b)=>a+b,0);let x=rng(r)*total;
  for(let i=0;i<pool.length;i++){x-=weights[i];if(x<=0)return pool[i];}return pool[pool.length-1];
@@ -443,7 +445,7 @@ function resolveContest(s){
  const from=c.startWeek;const yr=yearOf(r.week);
  const entries=c.entries.map(id=>r.works.find(w=>w.id===id)).filter(Boolean).map(w=>{const msgs=w.weekly.filter(x=>x.week>=from).reduce((a,b)=>a+b.msgs,0);const fit=c.theme.kind==='tag'?w.tags.filter(t=>r.trend.tags.includes(t)).length*3:c.theme.kind==='story'||c.theme.kind==='buyout'?w.volume*3:5;return {id:w.id,title:w.title,author:r.name,score:R(w.quality*0.7+Math.log10(msgs+1)*9+fit+(rng(r)*16-8)),rival:false};});
  const n=c.id==='rookie'?6:10;const rivalPool=r.rivals.filter(rv=>c.id!=='rookie'||rv.followers<1500);
- const used=new Set();const rivalEntries=Array.from({length:n},()=>{let rv=pick(r,rivalPool);for(let k=0;k<5&&used.has(rv.id);k++)rv=pick(r,rivalPool);used.add(rv.id);const x=rv.works[rv.works.length-1];const base=c.id==='rookie'?45:55;return {title:x?x.title:rivalTitle(r,byId(D.RIVAL_ARCHETYPES,rv.arch)),author:rv.name,score:R(base+rv.power*14+Math.log10(rv.followers+1)*4+yr*2+(rng(r)*20-10)),rival:true};});
+ const used=new Set();const rivalEntries=Array.from({length:n},()=>{let rv=pick(r,rivalPool);for(let k=0;k<5&&used.has(rv.id);k++)rv=pick(r,rivalPool);used.add(rv.id);const x=rv.works[rv.works.length-1];const base=c.id==='rookie'?45:55;return {title:x?x.title:rivalTitle(r,byId(D.RIVAL_ARCHETYPES,rv.arch)),author:rv.name,score:R((base+rv.power*14+Math.log10(rv.followers+1)*4+yr*2+(rng(r)*20-10))*difficultyOf(r).contest),rival:true};});
  const all=[...entries,...rivalEntries].sort((a,b)=>b.score-a.score);
  const result={name:c.name,week:r.week,board:all.slice(0,10),mine:[]};
  all.forEach((e,i)=>{if(e.rival)return;const rank=i+1;const bucket=rank===1?0:rank<=3?1:rank<=6?2:rank<=10?3:-1;const w=r.works.find(w=>w.id===e.id);
