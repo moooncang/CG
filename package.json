@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node --check server.js && node --check game.js && node --check data.js && node --check public/app.js",
+    "build": "node --check server.js && node --check game.js && node --check data.js && node --check public/app.js && node --check public/pixels.js",
     "test": "node --test",
     "build:pages": "node scripts/build-pages.js"
   },

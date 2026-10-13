@@ -9,6 +9,7 @@ export const GIFT_RATE={creator:0.9,normal:0.7};
 export const CASHOUT_MIN=10000;
 export const CREATOR_REQ={works:10,players:1000,followers:500,messages:100000};
 
+
 export const TARGETS=[
  {id:'female',name:'여성향',desc:'관계·감정선·서사 중심. 로맨스/로판/드라마 선호.',pool:1.0},
  {id:'male',name:'남성향',desc:'시뮬·육성·세계관·액션 선호. 분량과 시스템을 본다.',pool:0.9},
@@ -217,6 +218,32 @@ export const TITLE_PARTS={
  worlds:['아포칼립스','던전','황궁','기숙사','우주정거장','폐광','마법학교','뒷골목','요양원','섬'],
 };
 export const EVENTS=[
+ // 난이도 전용: 6주차부터 12주 간격으로 순환. 일반 랜덤 풀과 분리한다.
+ {id:'easy_mentor',difficulty:'easy',symbol:'bulb',title:'신인 멘토링 지원',text:'멘토가 다음 제작을 도와주겠다고 한다. 필요한 지원을 선택하자.',options:[
+  {label:'제작 코칭 · 2주간 작업 속도 +15%, 기획 경험치 +20',effects:{progressMod:{mul:1.15,weeks:2},skillXp:{planning:20}},log:'제작 코칭을 받았다.'},
+  {label:'운영 지원 · 자금 +12만원',effects:{money:120000},log:'운영 지원금을 받았다.'}]},
+ {id:'easy_feedback',difficulty:'easy',symbol:'heart',title:'독자 응원 모임',text:'작은 독자 모임에서 응원이 도착했다. 다음 작품을 준비할 여유가 생겼다.',options:[
+  {label:'아이디어 나누기 · 영감 +18, 팔로워 +15',effects:{inspiration:18,followers:15},log:'독자들과 아이디어를 나눴다.'},
+  {label:'재충전 · 스트레스 -18',effects:{stress:-18},log:'응원을 받고 쉬었다.'}]},
+ {id:'normal_study',difficulty:'normal',symbol:'book',title:'제작 스터디 모집',text:'제작자들이 소규모 스터디를 연다. 이번에 배울 주제를 정하자.',options:[
+  {label:'프롬프트 연구 · 프롬프트 경험치 +16',effects:{skillXp:{prompt:16}},log:'프롬프트 작성법을 교환했다.'},
+  {label:'장르 분석 · 기획 경험치 +16',effects:{skillXp:{planning:16}},log:'장르별 전개를 분석했다.'}]},
+ {id:'normal_exchange',difficulty:'normal',symbol:'mail',title:'제작자 교류회',text:'동료 제작자들이 홍보 경험과 휴식 방법을 공유하고 있다.',options:[
+  {label:'홍보 사례 듣기 · 2주간 신규 노출 +10%',effects:{reachMod:{mul:1.1,weeks:2}},log:'홍보 사례를 적용했다.'},
+  {label:'동료와 쉬기 · 스트레스 -8, 영감 +8',effects:{stress:-8,inspiration:8},log:'동료와 재충전했다.'}]},
+ {id:'hard_rush',difficulty:'hard',symbol:'warning',title:'인기 장르 신작 경쟁',text:'인기 장르에 경쟁작이 몰렸다. 짧게 집중 홍보하거나 다음 제작을 준비할 수 있다.',options:[
+  {label:'홍보 집중 · 2주간 신규 노출 +20%, 스트레스 +10',effects:{reachMod:{mul:1.2,weeks:2},stress:8},log:'경쟁 속에서 홍보에 집중했다.'},
+  {label:'다음 기획 준비 · 영감 +12, 2주간 신규 노출 -10%',effects:{inspiration:12,reachMod:{mul:0.9,weeks:2}},log:'현재 유입을 양보하고 기획을 준비했다.'}]},
+ {id:'hard_review',difficulty:'hard',symbol:'scroll',title:'까다로운 합평회',text:'동료들이 개선점을 조목조목 지적한다. 피드백을 받아들이는 데에도 여유가 필요하다.',options:[
+  {label:'분석하기 · 프롬프트 경험치 +30, 스트레스 +10',effects:{skillXp:{prompt:30},stress:8},log:'합평을 분석해 역량을 키웠다.'},
+  {label:'일정 조정 · 스트레스 -10, 1주간 작업 속도 -10%',effects:{stress:-10,progressMod:{mul:0.9,weeks:1}},log:'제작 속도를 낮추고 컨디션을 회복했다.'}]},
+ {id:'legend_challenge',difficulty:'nightmare',symbol:'trophy',title:'상위권 제작자 공개 도전',text:'상위권 제작자들이 공개 제작 챌린지를 연다. 단기 노출 기회지만 부담도 크다.',options:[
+  {label:'참가 · 2주간 신규 노출 +25%, 스트레스 +18',effects:{reachMod:{mul:1.25,weeks:2},stress:12},log:'상위권 챌린지에 참가했다.'},
+  {label:'내 작업에 집중 · 영감 +14, 2주간 신규 노출 -15%',effects:{inspiration:14,reachMod:{mul:0.85,weeks:2}},log:'노출 경쟁 대신 다음 기획을 준비했다.'}]},
+ {id:'legend_precision',difficulty:'nightmare',symbol:'gear',title:'고난도 프롬프트 검증',text:'복잡한 프롬프트의 검증 기회가 생겼다. 집중 연구와 안정적인 일정 사이에서 선택하자.',options:[
+  {label:'집중 연구 · 프롬프트 경험치 +40, 스트레스 +18',effects:{skillXp:{prompt:40},stress:12},log:'집중 연구로 프롬프트 경험을 쌓았다.'},
+  {label:'작업량 축소 · 스트레스 -12, 2주간 작업 속도 -10%',effects:{stress:-12,progressMod:{mul:0.9,weeks:2}},log:'작업량을 줄여 컨디션을 관리했다.'}]},
+
  // --- 플랫폼·정책 ---
  {id:'policy_revision',title:'운영 정책 개정 안내',text:'캐릭터 생성 정책이 구체화됐다. 프로필·상황 이미지·프롬프트의 금지 항목이 명시되고, 퍼온 이미지 작품은 집중 점검 대상이다.',weight:2,options:[
   {label:'내 작품을 점검한다 (체력 -15)',effects:{energy:-15,riskAll:-2,stress:4},log:'작품을 점검해 위험 요소를 줄였다.'},
@@ -523,11 +550,13 @@ export const FEED_TEMPLATES={
 // ================= 난이도 =================
 // 난이도는 수치 전반에 곱해진다. legacyMul은 유산 획득 배율.
 export const DIFFICULTIES=[
- {id:'easy',name:'입문',desc:'유입·정산 +30%, 지출 -15%, 악재 절반, 라이벌 약함. 유산 ×0.5',money:1.3,energy:10,exposure:1.3,settle:1.3,cost:0.85,rival:0.8,rivalGrow:0.8,bad:0.5,stress:0.8,req:0.8,review:1.2,contest:0.8,legacyMul:0.5,bankrupt:null},
- {id:'normal',name:'보통',desc:'기준 난이도. 유산 ×1',money:1,energy:0,exposure:1,settle:1,cost:1,rival:1,rivalGrow:1,bad:1,stress:1,req:1,review:1,contest:1,legacyMul:1,bankrupt:null},
- {id:'hard',name:'하드',desc:'유입 -25%, 정산 -15%, 지출 +20%, 체력 -10, 악재 1.6배, 라이벌 1.3배, 미션 조건 1.5배, 제재 3회면 권한 박탈. 유산 ×1.6',money:0.7,energy:-10,exposure:0.75,settle:0.85,cost:1.2,rival:1.3,rivalGrow:1.3,bad:1.6,stress:1.3,req:1.5,review:0.8,contest:1.25,legacyMul:1.6,bankrupt:-3000000,strikes:3},
- {id:'nightmare',name:'지옥',desc:'유입 -45%, 정산 -30%, 지출 +40%, 체력 -20, 악재 2.2배, 라이벌 1.6배(성장 가속), 미션 조건 2배, 제재 2회 박탈, 자금 -200만원 이하면 파산 엔딩. 유산 ×2.5',money:0.5,energy:-20,exposure:0.55,settle:0.7,cost:1.4,rival:1.6,rivalGrow:1.7,bad:2.2,stress:1.5,req:2,review:0.65,contest:1.5,legacyMul:2.5,bankrupt:-2000000,strikes:2},
+ // startMoney/reach는 UI 호환용 별칭(money/exposure와 동일)
+ {id:'easy',name:'입문',symbol:'heart',stats:1.15,desc:'유입·정산 +30%, 지출 -15%, 악재 절반, 라이벌 약함. 유산 ×0.5',money:1.3,energy:10,exposure:1.3,settle:1.3,cost:0.85,rival:0.8,rivalGrow:0.8,bad:0.5,stress:0.8,req:0.8,review:1.2,contest:0.8,legacyMul:0.5,bankrupt:null},
+ {id:'normal',name:'보통',symbol:'book',stats:1,desc:'기준 난이도. 유산 ×1',money:1,energy:0,exposure:1,settle:1,cost:1,rival:1,rivalGrow:1,bad:1,stress:1,req:1,review:1,contest:1,legacyMul:1,bankrupt:null},
+ {id:'hard',name:'하드',symbol:'sword',stats:0.9,desc:'유입 -25%, 정산 -15%, 지출 +20%, 체력 -10, 악재 1.6배, 라이벌 1.3배, 미션 조건 1.5배, 제재 3회면 권한 박탈. 유산 ×1.6',money:0.7,energy:-10,exposure:0.75,settle:0.85,cost:1.2,rival:1.3,rivalGrow:1.3,bad:1.6,stress:1.3,req:1.5,review:0.8,contest:1.25,legacyMul:1.6,bankrupt:-3000000,strikes:3},
+ {id:'nightmare',name:'지옥',symbol:'trophy',stats:0.8,desc:'유입 -45%, 정산 -30%, 지출 +40%, 체력 -20, 악재 2.2배, 라이벌 1.6배(성장 가속), 미션 조건 2배, 제재 2회 박탈, 자금 -200만원 이하면 파산 엔딩. 유산 ×2.5',money:0.5,energy:-20,exposure:0.55,settle:0.7,cost:1.4,rival:1.6,rivalGrow:1.7,bad:2.2,stress:1.5,req:2,review:0.65,contest:1.5,legacyMul:2.5,bankrupt:-2000000,strikes:2},
 ];
+for(const d of DIFFICULTIES){d.startMoney=d.money;d.reach=d.exposure;}
 // ================= 추가 콘텐츠 =================
 export const ITEMS_EXTRA=[
  {id:'standing',name:'스탠딩 데스크',price:900000,desc:'최대 체력 +5, 스트레스 회복 +2',effect:{energy:5,recover:2}},

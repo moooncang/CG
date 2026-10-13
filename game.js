@@ -24,6 +24,7 @@ export function migrate(s){
  s.meta.insights??=[];s.meta.archive??=[];s.meta.trophies??=[];s.meta.endings??=[];s.meta.runs??=[];s.meta.unlocks??=[];
  return s;
 }
+export const difficultyOf=r=>byId(D.DIFFICULTIES,r?.difficulty)||byId(D.DIFFICULTIES,'normal');
 export function has(s,unlock){return s.meta.unlocks.includes(unlock);}
 export const diffOf=r=>D.DIFFICULTIES.find(d=>d.id===(r?.difficulty||'normal'))||D.DIFFICULTIES[1];
 export function difficultyAvailable(s,id){if(id!=='nightmare')return true;return has(s,'nightmare_unlock')||s.meta.runs.some(x=>x.difficulty==='hard'||x.difficulty==='nightmare');}
@@ -37,6 +38,7 @@ export function derive(s){
  const r=s.run;if(!r)return null;
  const bg=byId(D.BACKGROUNDS,r.background)||D.BACKGROUNDS[0];const studio=D.STUDIOS[r.studio];const items=r.items.map(id=>byId(D.ITEMS,id)).filter(Boolean);
  const t=id=>r.traits.includes(id);const sum=k=>items.reduce((a,i)=>a+(i.effect[k]||0),0);
+ const difficulty=difficultyOf(r);
  const level=Math.floor(Math.sqrt(r.xp/60))+1;
  const diff=diffOf(r);const perm=r.perm;const f=k=>r.flags[k];
  const energyMax=Math.max(40,bg.energy+studio.energy+sum('energy')+(t('owl')?15:0)+(r.energyBonus||0)+diff.energy+perm.energy);
@@ -45,7 +47,7 @@ export function derive(s){
  const costMul=(t('thrifty')?0.85:1)*diff.cost*perm.cost;
  const genres=D.GENRES.filter(g=>has(s,'all_genres')||g.unlock<=r.skills.planning);
  const statMul={story:1+sum('storyMul'),stability:1+sum('stabilityMul')+(t('lorekeeper')?0.2:0),visual:1+sum('visualMul')+(t('visualist')?0.25:0)+(r.subs.includes('imagegen')?0.15:0),appeal:1+sum('appealMul')};
- const pointMul=(t('perfectionist')?1.15:1)*(t('prolific')?0.92:1)*(f('path_quality')?1.15:1)*(f('path_many')?0.95:1);
+ const pointMul=(diff.stats||1)*(t('perfectionist')?1.15:1)*(t('prolific')?0.92:1)*(f('path_quality')?1.15:1)*(f('path_many')?0.95:1);
  const progressMul=(t('perfectionist')?0.85:1)*(t('prolific')?1.2:1)*(f('path_quality')?0.9:1)*perm.progress*modMul(r,'progress');
  const trainCost=sk=>R(80000*Math.pow(r.skills[sk],1.5)*costMul);
  const helperMul=(r.studio>=3?0.8:1)*costMul*(bg.id==='illustrator'?0.5:1);
@@ -54,7 +56,7 @@ export function derive(s){
  const req=creatorReq(s);
  const settleRate=r.creatorStage>=2?D.SETTLE_RATE.base:0;
  const insightMul=has(s,'insight_bonus')?1+Math.min(0.25,s.meta.insights.length*0.01):1;
- return {level,energyMax,slots,crit,costMul,genres,statMul,pointMul,progressMul,progressBonus:sum('progress'),mediaProgress:sum('mediaProgress'),workStress:sum('workStress'),readBonus:sum('readBonus'),awardRep:sum('awardRep'),promoMul:1+sum('promoMul'),backup:sum('backup')>0||r.subs.includes('insurance'),trainCost,helperMul,recover,inspirationWeekly,studio,bg,diff,salary:(bg.salary||0)+perm.salary,rent:R(studio.rent*perm.rent),exposureMul:diff.exposure*perm.exposure*insightMul,settleMul:diff.settle*perm.pay,weeksLeft:r.careerWeeks-r.week+1,repTier:repTier(r.rep),req,settleRate,canSeeTrend:r.subs.includes('trend')||r.skills.community>=4};
+ return {difficulty:diff,level,energyMax,slots,crit,costMul,genres,statMul,pointMul,progressMul,progressBonus:sum('progress'),mediaProgress:sum('mediaProgress'),workStress:sum('workStress'),readBonus:sum('readBonus'),awardRep:sum('awardRep'),promoMul:1+sum('promoMul'),backup:sum('backup')>0||r.subs.includes('insurance'),trainCost,helperMul,recover,inspirationWeekly,studio,bg,diff,salary:(bg.salary||0)+perm.salary,rent:R(studio.rent*perm.rent),exposureMul:diff.exposure*perm.exposure*insightMul,settleMul:diff.settle*perm.pay,weeksLeft:r.careerWeeks-r.week+1,repTier:repTier(r.rep),req,settleRate,canSeeTrend:r.subs.includes('trend')||r.skills.community>=4};
 }
 
 // 공개 시 능력치 계산 (예측·실제 동일, 실제는 소량 노이즈)
@@ -123,7 +125,7 @@ export function startRun(s,a){
  r.rivals=Array.from({length:16},(_,i)=>makeRival(r,i));for(const rv of r.rivals)rv.power*=diff.rival;
  if(has(s,'rival_friend'))for(const rv of r.rivals.slice(0,3))rv.relation=40;if(has(s,'start_item'))r.items.push('chair','notebook');if(diff.id==='hard'||diff.id==='nightmare')r.stats.counters.hard=1;
  r.trend=rollTrend(r);r.nextTrend=rollTrend(r);r.energy=derive({...s,run:r}).energyMax;
- s.run=r;openContest(s);log(r,`${name} 작가의 ${r.careerWeeks/D.WEEKS_PER_YEAR}년 도전이 시작됐다. 첫 작품을 만들어 보자!`);notice(r,'크리에이터가 되려면: 전체 공개 작품 10개 · 누적 대화 유저 1,000명 · 팔로워 500명을 채운 뒤 미션(누적 발화 10만)을 달성해야 해요. 그 전까진 선물(70%)과 부업이 수입이에요.');
+ s.run=r;openContest(s);log(r,`${name} 작가의 ${r.careerWeeks/D.WEEKS_PER_YEAR}년 도전이 시작됐다. 첫 작품을 만들어 보자!`);{const q=creatorReq(s);notice(r,`크리에이터가 되려면: 전체 공개 작품 ${q.works}개 · 누적 대화 유저 ${q.players.toLocaleString('ko-KR')}명 · 팔로워 ${q.followers.toLocaleString('ko-KR')}명을 채운 뒤 미션(누적 발화 ${q.messages.toLocaleString('ko-KR')})을 달성해야 해요. 그 전까진 선물(70%)과 부업이 수입이에요.`);}
  return s;
 }
 function requireRun(s){if(!s.run)throw Error('진행 중인 회차가 없어요. 새 회차를 시작해 주세요.');if(s.run.ended)throw Error('이 회차는 끝났어요. 새 회차를 시작해 주세요.');return s.run;}
@@ -383,6 +385,8 @@ function endWeek(s,dv){
  if(weekOfMonth(r.week)===1&&r.week>1){let fee=0;for(const id of r.subs)fee+=byId(D.SUBSCRIPTIONS,id).monthly;if(fee){r.money-=R(fee*dv.costMul);r.report.events.push(`구독료 ${R(fee*dv.costMul).toLocaleString('ko-KR')}원 결제`);}r.trend=r.nextTrend;r.nextTrend=rollTrend(r);}
  if(burnout){r.queue.push({kind:'event',eventId:'__burnout',title:'번아웃',text:'몸과 마음이 멈췄다. 이번 주는 절반의 체력으로 시작한다. 쉬어가자.',options:[{label:'...쉬자'}]});r.report.events.push('번아웃! 체력 절반으로 시작');}
  if(rng(r)<(dv.diff.bad>1?0.6:0.5)){const ev=rollEvent(s);if(ev){const rv=ev.need==='relationGood'?(r.rivals.find(x=>x.relation>=30)||pick(r,r.rivals)):pick(r,r.rivals);const tier=r.rep>=1200?'상위권':r.rep>=300?'중위권':'"기타"';r.queue.push({kind:'event',eventId:ev.id,rivalId:rv.id,title:ev.title.replace('{rival}',rv.name),text:ev.text.replace('{rival}',rv.name).replace('{tier}',tier),options:ev.options.map(o=>({label:o.label,needSkill:o.needSkill}))});if(ev.once)(r.flags.seen??=[]).push(ev.id);}}
+ // 난이도 전용 이벤트: 6주차부터 12주 간격 순환
+ if(r.week<=r.careerWeeks&&r.week%12===6){const pool=D.EVENTS.filter(e=>e.difficulty===r.difficulty);const ev=pool[Math.floor((r.week-6)/12)%pool.length];if(ev)r.queue.push({kind:'event',eventId:ev.id,difficulty:ev.difficulty,symbol:ev.symbol,title:ev.title,text:ev.text,options:ev.options.map(o=>({label:o.label}))});}
  r.energy=burnout?R(dv.energyMax/2):dv.energyMax;if(r.flags.energyPenalty){r.energy=Math.max(10,r.energy-r.flags.energyPenalty);delete r.flags.energyPenalty;}
  r.weekActions={promos:{},jobs:{},nap:false,updates:{}};
  if(r.week-1>=8)insight(s,'creator_gate');if(dv.backup)insight(s,'backup');if(c0(r,'summer'))insight(s,'season_summer');if(c0(r,'path'))insight(s,'path');if(c0(r,'sanction_hard'))insight(s,'strikes');if(r.rivals.some(x=>Math.abs(x.relation)>=30))insight(s,'rival_relation');if((r.stats.counters.updates||0)>=10)insight(s,'longtail');if(['hard','nightmare'].includes(r.difficulty))insight(s,'difficulty');if((r.stats.counters.gallery||0)>=3)insight(s,'gallery_adult');if((r.stats.counters.tagmeta||0)>=1)insight(s,'tags_meta');if((r.stats.counters.updates||0)>=3)insight(s,'fresh_update');if((r.stats.counters.adult||0)>=1&&r.works.some(w=>w.audience==='adult'&&w.plays>0))insight(s,'adult_pay');if((r.stats.counters.length3||0)>=1)insight(s,'length_tradeoff');if((r.stats.counters.target_female||0)>=2)insight(s,'female_story');if((r.stats.counters.target_male||0)>=2)insight(s,'male_sim');
@@ -415,7 +419,7 @@ function resolveReview(s,w){
 function rollEvent(s){
  const r=s.run;const lucky=r.traits.includes('lucky');const pub=r.works.filter(w=>w.visibility==='public'&&w.status==='active');
  const one=need=>{if(need===undefined)return true;if(need.startsWith('flag:'))return !!r.flags[need.slice(5)];if(need.startsWith('noflag:'))return !r.flags[need.slice(7)];if(need.startsWith('month:'))return monthOf(r.week)===Number(need.slice(6));if(need.startsWith('bg:'))return r.background===need.slice(3);if(need==='diff:hard')return ['hard','nightmare'].includes(r.difficulty);switch(need){case undefined:return true;case 'published':return pub.length>0;case 'published_all':return pub.some(w=>w.audience==='all');case 'stress60':return r.stress>=60;case 'stress50':return r.stress>=50;case 'rep150':return r.rep>=150;case 'rep300':return r.rep>=300;case 'rep800':return r.rep>=800&&!r.flags.publisher;case 'fans500':return r.followers>=500;case 'fans1000':return r.followers>=1000;case 'fans2000':return r.followers>=2000;case 'rich':return r.settledTotal>=5000000;case 'cat':return r.items.includes('cat');case 'creator':return r.creatorStage>=2;case 'only':return pub.some(w=>w.badges.only&&w.badges.only>=r.week);case 'fanwork':return pub.some(w=>w.origin==='fanwork');case 'ripped':return pub.some(w=>w.imageSource==='ripped');case 'hit':return pub.some(w=>w.messages>50000);case 'rep500':return r.rep>=500;case 'reviewing':return r.works.some(w=>w.originalReview);case 'relationGood':return r.rivals.some(x=>x.relation>=30);case 'hasAdult':return pub.some(w=>w.audience==='adult');case 'poor':return r.money<300000;case 'creator1':return r.creatorStage>=1;case 'rep100':return r.rep>=100;case 'rep200':return r.rep>=200;case 'originals1':return r.stats.originals>=1;case 'burnout1':return r.stats.burnouts>=1;case 'fans800':return r.followers>=800;case 'drafting':return r.drafts.length>0;case 'studio1':return r.studio>=1;case 'keyboard':return r.items.includes('keyboard');case 'money_low':return r.money<500000;default:return false;}};
- const ok=e=>{if(e.chain)return false;if(e.once&&(r.flags.seen||[]).includes(e.id))return false;const needs=Array.isArray(e.need)?e.need:[e.need];return needs.every(one);};
+ const ok=e=>{if(e.chain||e.difficulty)return false;if(e.once&&(r.flags.seen||[]).includes(e.id))return false;const needs=Array.isArray(e.need)?e.need:[e.need];return needs.every(one);};
  const pool=D.EVENTS.filter(ok);if(!pool.length)return null;
  const bad=new Set(['troll','price_up','maintenance','laptop','plagiarism','model_update','cold','censorship_drama','status_changed','tax','gallery_rank','hacked','prompt_leak','refund_wave','settle_delay','comment_raid','algo_drop','fee_up','release_rush','usernote_abuse','review_delay','false_report','theft','fan_leave','ill','rival_diss','ad_policy','bug_week']);
  const badMul=diffOf(r).bad;const isBad=e=>bad.has(e.id)||e.need==='diff:hard'||(Array.isArray(e.need)&&e.need.includes('diff:hard'));const weights=pool.map(e=>e.weight*(lucky&&bad.has(e.id)?0.5:1)*(isBad(e)?badMul:1));const total=weights.reduce((a,b)=>a+b,0);let x=rng(r)*total;
