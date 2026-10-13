@@ -81,3 +81,5 @@ label{display:block;font-size:12px;margin-bottom:8px;color:var(--muted)}label in
 .up{color:var(--good)}.down{color:var(--bad)}
 .result-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.grade{font-size:38px;font-weight:900;line-height:1;text-align:center;padding:6px 14px;border-radius:12px;border:2px solid var(--border)}.grade small{display:block;font-size:10px;font-weight:400;color:var(--muted)}.g-S{color:#ffd27a;border-color:#ffd27a}.g-A{color:#9fd3ff;border-color:#9fd3ff}.g-B{color:var(--good)}.g-C{color:var(--muted)}.g-D{color:var(--bad)}
 .awards li{font-size:14px}
+.choices.diff{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.diff-easy{color:var(--good)}.diff-normal{color:var(--text)}.diff-hard{color:var(--warn)}.diff-nightmare{color:var(--bad);font-weight:700}
+.trophy i{display:block;font-style:normal;font-size:10px;color:var(--accent2);margin-top:2px}.options button small{display:inline;margin-left:6px;color:var(--muted)}

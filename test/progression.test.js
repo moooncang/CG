@@ -110,3 +110,29 @@ test('대회: 공고·참가 자격·결과·수상, 연말 어워드',()=>{
  r.week=D.WEEKS_PER_YEAR;r.creatorStage=1;while(r.works.length<5){r.works.push({...structuredClone(w),id:'w'+r.works.length});}clear(s);act(s,{type:'endweek'});
  assert.ok(r.queue.some(q=>q.kind==='awards'),'연말 어워드 모달');assert.ok(r.awards.some(a=>a.name==='신인 크리에이터상'));
 });
+test('난이도: 선택 검증과 수치 차이, 파산 엔딩',()=>{
+ const s=initial();assert.throws(()=>act(s,{type:'newgame',name:'x',background:'dreamer',traits:['muse'],difficulty:'nightmare'}),/지옥/);
+ assert.throws(()=>act(s,{type:'newgame',name:'x',background:'dreamer',traits:['muse'],difficulty:'wat'}),/난이도/);
+ const easy=start(1,{difficulty:'easy'}),hard=start(1,{difficulty:'hard'});
+ assert.ok(easy.run.money>hard.run.money);assert.ok(derive(easy).energyMax>derive(hard).energyMax);assert.ok(derive(hard).req.works>derive(easy).req.works);assert.ok(derive(hard).costMul>derive(easy).costMul);
+ assert.ok(hard.run.rivals[0].power>easy.run.rivals[0].power*1.2);
+ hard.run.money=-5000000;clear(hard);act(hard,{type:'endweek'});assert.ok(hard.run.ended);assert.equal(hard.run.ended.ending,'bankrupt');
+ s.meta.unlocks.push('nightmare_unlock');act(s,{type:'newgame',name:'x',background:'dreamer',traits:['muse'],difficulty:'nightmare'});assert.equal(s.run.difficulty,'nightmare');assert.equal(G.diffOf(s.run).strikes,2);
+});
+test('분기 아크: 예약 이벤트·플래그·영구 효과',()=>{
+ const s=start(2);const r=s.run;r.creatorStage=1;r.rep=250;
+ r.queue.push({kind:'event',eventId:'studio_offer',rivalId:r.rivals[0].id,title:'t',text:'t',options:[{label:'a'},{label:'b',needSkill:['community',4]},{label:'c'}]});
+ assert.throws(()=>act(s,{type:'choose',option:1}),/커뮤니티/);
+ act(s,{type:'choose',option:0});assert.ok(r.flags.studio);assert.equal(r.perm.salary,400000);assert.equal(r.perm.pay,0.7);assert.ok(r.scheduled.some(x=>x.id==='studio_interfere'));assert.equal(derive(s).salary,400000);
+ for(let i=0;i<11;i++){clear(s);act(s,{type:'endweek'});}
+ assert.ok(r.log.some(l=>l.includes('스튜디오의 요구'))||r.queue.some(q=>q.eventId==='studio_interfere'),'예약 이벤트 도착');
+ while(r.queue.length){if(r.queue[0].eventId==='studio_interfere'){act(s,{type:'choose',option:1});assert.ok(r.flags.studio_tension);}else act(s,{type:'choose',option:0});}
+ r.creatorStage=2;r.stats.creatorWeek=0;r.scheduled.push({id:'creator_path',week:r.week});clear(s);act(s,{type:'endweek'});
+ const q=r.queue.find(q=>q.eventId==='creator_path');assert.ok(q,'노선 선택 분기점');
+});
+test('업적 자동 판정',()=>{
+ const s=start(3);const r=s.run;r.followers=120;r.stress=0;clear(s);act(s,{type:'endweek'});
+ assert.ok(s.meta.trophies.includes('fans100'));assert.ok(s.meta.trophies.includes('stress0')||r.stress>0);
+ const ctx=G.trophyCtx(s);assert.equal(typeof ctx.messages,'number');assert.ok(D.TROPHIES.length>=100);
+ for(const t of D.TROPHIES)if(t.cond)assert.doesNotThrow(()=>G.trophyCtx(s),t.id);
+});

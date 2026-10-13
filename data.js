@@ -519,3 +519,416 @@ export const FEED_TEMPLATES={
  hot:['🔥 「{title}」 반응 뜨거운 신작 진입'],
  contest_open:['📣 {name} 접수 시작! {desc}'],
 };
+
+// ================= 난이도 =================
+// 난이도는 수치 전반에 곱해진다. legacyMul은 유산 획득 배율.
+export const DIFFICULTIES=[
+ {id:'easy',name:'입문',desc:'유입·정산 +30%, 지출 -15%, 악재 절반, 라이벌 약함. 유산 ×0.5',money:1.3,energy:10,exposure:1.3,settle:1.3,cost:0.85,rival:0.8,rivalGrow:0.8,bad:0.5,stress:0.8,req:0.8,review:1.2,contest:0.8,legacyMul:0.5,bankrupt:null},
+ {id:'normal',name:'보통',desc:'기준 난이도. 유산 ×1',money:1,energy:0,exposure:1,settle:1,cost:1,rival:1,rivalGrow:1,bad:1,stress:1,req:1,review:1,contest:1,legacyMul:1,bankrupt:null},
+ {id:'hard',name:'하드',desc:'유입 -25%, 정산 -15%, 지출 +20%, 체력 -10, 악재 1.6배, 라이벌 1.3배, 미션 조건 1.5배, 제재 3회면 권한 박탈. 유산 ×1.6',money:0.7,energy:-10,exposure:0.75,settle:0.85,cost:1.2,rival:1.3,rivalGrow:1.3,bad:1.6,stress:1.3,req:1.5,review:0.8,contest:1.25,legacyMul:1.6,bankrupt:-3000000,strikes:3},
+ {id:'nightmare',name:'지옥',desc:'유입 -45%, 정산 -30%, 지출 +40%, 체력 -20, 악재 2.2배, 라이벌 1.6배(성장 가속), 미션 조건 2배, 제재 2회 박탈, 자금 -200만원 이하면 파산 엔딩. 유산 ×2.5',money:0.5,energy:-20,exposure:0.55,settle:0.7,cost:1.4,rival:1.6,rivalGrow:1.7,bad:2.2,stress:1.5,req:2,review:0.65,contest:1.5,legacyMul:2.5,bankrupt:-2000000,strikes:2},
+];
+// ================= 추가 콘텐츠 =================
+export const ITEMS_EXTRA=[
+ {id:'standing',name:'스탠딩 데스크',price:900000,desc:'최대 체력 +5, 스트레스 회복 +2',effect:{energy:5,recover:2}},
+ {id:'nas',name:'백업 NAS',price:700000,desc:'도난·고장 이벤트의 작업 손실 방지',effect:{backup:1}},
+ {id:'mic',name:'방송용 마이크',price:1100000,desc:'SNS·디스코드 홍보 효과 +10%',effect:{promoMul:0.1}},
+ {id:'ssd',name:'대용량 SSD',price:500000,desc:'이미지 작업 진행 +4',effect:{mediaProgress:4}},
+ {id:'ring',name:'타이머 링',price:300000,desc:'작업당 스트레스 -1',effect:{workStress:-1}},
+ {id:'aroma',name:'아로마 디퓨저',price:250000,desc:'영감 +2/주, 스트레스 회복 +2',effect:{inspiration:2,recover:2}},
+ {id:'vr',name:'VR 헤드셋',price:1800000,desc:'다른 작품 플레이 영감 +8',effect:{readBonus:8}},
+ {id:'frame',name:'수상 액자',price:400000,desc:'수상 1개당 인지도 +1/주',effect:{awardRep:1}},
+];
+export const SUBSCRIPTIONS_EXTRA=[
+ {id:'analytics',name:'독자 분석 대시보드',monthly:40000,desc:'작품별 이탈 원인 표시, 업데이트 효과 +20%'},
+ {id:'insurance',name:'크리에이터 보험',monthly:70000,desc:'해킹·도난·입원 이벤트 손실 전액 보전'},
+];
+export const JOBS_EXTRA=[
+ {id:'translate',name:'프롬프트 번역 외주',energy:20,money:350000,stress:7,rep:60,desc:'인지도 60 필요. 해외 서비스용 번역.',xp:'prompt'},
+ {id:'thumbnail',name:'썸네일 제작 대행',energy:18,money:300000,stress:6,rep:80,desc:'인지도 80 필요. 연출 경험치 +.',xp:'direction'},
+ {id:'judge',name:'공모전 심사위원',energy:15,money:800000,stress:5,rep:600,desc:'인지도 600 필요. 커뮤니티 경험치 +.',xp:'community'},
+];
+export const LIFE_EXTRA=[
+ {id:'journal',name:'설정 노트 정리',energy:8,stress:-3,inspiration:10,desc:'영감 +10, 기획 경험치 +4',xp:'planning'},
+ {id:'trip',name:'당일치기 여행 (-8만원)',energy:25,stress:-30,inspiration:18,money:-80000,desc:'스트레스 -30, 영감 +18'},
+ {id:'stream',name:'제작 방송',energy:15,stress:4,inspiration:2,followers:12,desc:'팔로워 +12, 인지도 +3',rep:3},
+];
+export const HELPERS_EXTRA=[
+ {id:'voice',name:'단축어·가이드 외주',price:200000,desc:'단축어 진행 +60, 어필 포인트 +8',module:'shortcut',progress:60,stat:'appeal',points:8},
+ {id:'lore',name:'키워드북 대필',price:350000,desc:'키워드북 진행 +50, 안정성 포인트 +14',module:'keyword',progress:50,stat:'stability',points:14},
+];
+export const TAGS_EXTRA=['학원제','졸업','첫사랑','재회','원수','복수','스승','제자','쌍둥이','기억상실','시한부','인어','천사','악마','탐정물','법정','요리','스포츠','밴드부','유학'];
+export const ENDINGS_EXTRA=[
+ {id:'contract',name:'전속 스튜디오의 간판',desc:'스튜디오 소속으로 안정과 간섭을 맞바꿨다. 당신의 이름 옆엔 늘 회사 로고가 붙는다.',cond:'studioContract>=1&&rep>=1000'},
+ {id:'ip',name:'IP 제국',desc:'소설·웹툰·굿즈. 캐릭터 챗에서 시작한 세계관이 다른 매체로 번졌다.',cond:'webtoon>=1&&publisher>=1'},
+ {id:'union',name:'연대의 작가',desc:'혼자가 아닌 함께. 크리에이터 연대의 얼굴이 되었다.',cond:'unionWin>=1&&rep>=800'},
+ {id:'ghost',name:'그림자 작가',desc:'이름은 알려지지 않았지만, 당신 손을 거친 작품이 랭킹을 채운다.',cond:'ghostJobs>=3'},
+ {id:'bankrupt',name:'파산',desc:'통장이 바닥났다. 꿈은 남았지만 월세는 기다려주지 않았다.',cond:'bankrupt>=1'},
+ {id:'ironman',name:'지옥을 건넌 자',desc:'가장 가혹한 조건에서 3년을 버텼다. 당신을 꺾을 수 있는 것은 이제 없다.',cond:'nightmare>=1&&creator>=1'},
+];
+export const INSIGHTS_EXTRA=[
+ {id:'contest_timing',text:'대회 공고 직후 공개한 작품이 심사 기간 동안 발화를 가장 많이 쌓는다.',cond:'contests>=1'},
+ {id:'difficulty',text:'난이도가 높을수록 유산 배율이 커진다. 지옥은 2.5배.',cond:'hard>=1'},
+ {id:'studio_cost',text:'전속 계약은 안정적이지만 정산을 나눠야 한다. 협상 역량(커뮤니티)이 조건을 바꾼다.',cond:'studioContract>=1'},
+ {id:'backup',text:'백업 NAS와 보험은 악재 이벤트의 손실을 막아준다.',cond:'backup>=1'},
+ {id:'season_summer',text:'여름 방학(7~8월)엔 학생 독자가 늘고, 연말(12월)엔 선물이 늘어난다.',cond:'summer>=1'},
+ {id:'path',text:'크리에이터 노선 선택은 되돌릴 수 없다. 다작·완성도·커뮤니티 중 플레이 스타일에 맞게.',cond:'path>=1'},
+ {id:'strikes',text:'하드 이상에서는 제재 누적 한도가 줄어든다. 퍼온 이미지는 한 번이면 끝이다.',cond:'sanction_hard>=1'},
+ {id:'superfan',text:'열성 팬과의 관계는 축복이자 위험이다. 거리를 두는 선택도 있다.',cond:'superfan>=1'},
+ {id:'rival_relation',text:'라이벌과의 관계가 좋으면 추천·콜라보가, 나쁘면 저격·허위 신고가 온다.',cond:'relation>=1'},
+ {id:'longtail',text:'완결된 작품도 시즌 업데이트로 되살릴 수 있다. 팔로워 알림이 다시 간다.',cond:'revive>=1'},
+];
+export const LEGACY_EXTRA=[
+ {id:'nightmare_unlock',name:'지옥 난이도 해금',cost:2,desc:'난이도 "지옥"을 선택할 수 있다'},
+ {id:'start_item',name:'선배의 장비',cost:3,desc:'매 회차 인체공학 의자·설정집 노트 보유'},
+ {id:'rival_friend',name:'갤러리 인맥',cost:2,desc:'매 회차 라이벌 3명과 우호 관계로 시작'},
+ {id:'insight_bonus',name:'독자 분석가',cost:3,desc:'발견한 인사이트 1개당 유입 +1% (최대 25%)'},
+ {id:'second_chance',name:'재심 청구',cost:3,desc:'오리지널 심사 미선정 시 1회 자동 재심'},
+ {id:'legacy_bank',name:'유산 이자',cost:4,desc:'회차 종료 시 유산 +1 추가'},
+];
+
+// ================= 분기점 아크 & 대량 이벤트 =================
+// chain:true 이벤트는 랜덤으로 뜨지 않고 schedule/분기로만 등장한다. need는 문자열 또는 배열.
+export const EVENTS_EXTRA=[
+ // ---------- 아크 A: 전속 스튜디오 ----------
+ {id:'studio_offer',title:'전속 계약 제안',text:'제작 스튜디오 "루미나 크리에이티브"가 전속 계약을 제안했다. 매주 활동비를 주고 홍보를 대신해 주지만, 정산의 30%를 가져가고 작품 방향에 관여한다.',weight:1,once:true,need:['creator1','rep200','noflag:studio','noflag:studio_declined'],options:[
+  {label:'계약한다 (주 40만원, 정산 -30%)',effects:{flag:'studio',salaryDelta:400000,payPerm:0.7,exposurePerm:1.2,schedule:[['studio_interfere',10]],rep:20},log:'루미나와 전속 계약. 매주 활동비, 정산 70%.'},
+  {label:'조건을 협상한다 (커뮤니티 Lv.4)',needSkill:['community',4],effects:{flag:'studio',flag2:'studio_good',salaryDelta:400000,payPerm:0.85,exposurePerm:1.2,schedule:[['studio_interfere',10]],rep:30},log:'협상 성공. 정산 85%에 계약.'},
+  {label:'거절한다',effects:{flag:'studio_declined',rep:10,inspiration:5},log:'내 이름으로 간다.'}]},
+ {id:'studio_interfere',title:'스튜디오의 요구',text:'루미나가 "다음 작품은 남성향 시뮬로, 성인 등급으로" 지시했다. 계약서엔 "방향 협의" 조항이 있다.',chain:true,options:[
+  {label:'따른다',effects:{money:500000,stress:12,inspiration:-10,schedule:[['studio_renew',14]]},log:'지시대로 만들었다. 보너스 50만원, 영감은 떨어졌다.'},
+  {label:'거부한다',effects:{flag:'studio_tension',stress:8,schedule:[['studio_breakup',6]]},log:'거부했다. 관계가 틀어졌다.'}]},
+ {id:'studio_breakup',title:'계약 해지 통보',text:'루미나가 계약 해지를 통보하며 위약금 200만원을 요구했다.',chain:true,options:[
+  {label:'위약금을 낸다 (-200만원)',effects:{money:-2000000,unflag:'studio',salaryDelta:-400000,payPerm:'reset',exposurePerm:'reset',stress:10,rep:5},log:'위약금을 내고 자유의 몸이 됐다.'},
+  {label:'법적 대응한다',effects:{stress:25,coin:{win:{money:500000,rep:60,unflag:'studio',salaryDelta:-400000,payPerm:'reset',exposurePerm:'reset'},lose:{money:-3000000,rep:-40,unflag:'studio',salaryDelta:-400000,payPerm:'reset',exposurePerm:'reset'}},chance:0.5},log:'분쟁 결과가 나왔다.'},
+  {label:'사과하고 잔류한다',effects:{unflag:'studio_tension',stress:15,schedule:[['studio_renew',12]]},log:'고개를 숙였다.'}]},
+ {id:'studio_renew',title:'계약 갱신',text:'루미나가 1년 계약 갱신을 제안했다. 이번엔 정산 분배를 조정할 수 있다.',chain:true,options:[
+  {label:'갱신 (정산 80%)',effects:{payPerm:0.8,rep:20,schedule:[['studio_interfere',16]]},log:'계약 갱신. 정산 80%.'},
+  {label:'종료한다',effects:{unflag:'studio',salaryDelta:-400000,payPerm:'reset',exposurePerm:'reset',rep:15,inspiration:10},log:'계약 종료. 다시 혼자다.'}]},
+ // ---------- 아크 B: 유령 작가 ----------
+ {id:'ghost_offer',title:'대필 의뢰',text:'네임드 제작자가 DM을 보냈다. "제 이름으로 낼 스토리 프롬을 써주실 수 있나요? 150만원 드립니다. 비밀로요."',weight:1,once:true,need:['rep150','noflag:ghost_declined'],options:[
+  {label:'수락한다 (+150만원)',effects:{money:1500000,flag:'ghost',counter:'ghostJobs',stress:6,schedule:[['ghost_followup',8]]},log:'대필 완료. 통장은 두둑, 이름은 없다.'},
+  {label:'거절한다',effects:{flag:'ghost_declined',rep:5},log:'내 이름으로만 쓴다.'}]},
+ {id:'ghost_followup',title:'대필의 결과',text:'당신이 대필한 작품이 랭킹 1위에 올랐다. 의뢰인은 추가 의뢰를 하고 싶어 한다.',chain:true,options:[
+  {label:'계속한다 (+200만원)',effects:{money:2000000,counter:'ghostJobs',stress:8,schedule:[['ghost_exposed',10]]},log:'두 번째 대필.'},
+  {label:'이제 그만둔다',effects:{rep:5,inspiration:10},log:'그림자에서 나왔다.'}]},
+ {id:'ghost_exposed',title:'대필 폭로',text:'갤러리에 "네임드 작품 사실 대필" 폭로글이 올라왔다. 당신 이름이 거론된다.',chain:true,options:[
+  {label:'인정한다',effects:{rep:-80,followers:60,stress:15,counter:'ghostJobs'},log:'솔직함에 일부는 박수를, 일부는 야유를.'},
+  {label:'부인한다',effects:{stress:25,coin:{win:{rep:10},lose:{rep:-200,followers:-150}},chance:0.5},log:'결과가 갈렸다.'}]},
+ // ---------- 아크 C: 크리에이터 연대 ----------
+ {id:'union_call',title:'크리에이터 연대 제안',text:'수수료·정산 문제로 제작자들이 공동 성명을 준비한다. 서명하면 플랫폼과 각을 세우는 셈이다.',weight:1,once:true,need:['creator','noflag:union_declined'],options:[
+  {label:'서명한다',effects:{flag:'union',rep:30,stress:6,schedule:[['union_result',6]]},log:'연대에 서명했다.'},
+  {label:'조용히 지켜본다',effects:{flag:'union_declined'},log:'침묵.'}]},
+ {id:'union_result',title:'연대의 결과',text:'플랫폼이 공식 답변을 냈다.',chain:true,options:[
+  {label:'결과 확인',effects:{coin:{win:{payMod:{mul:1.15,weeks:12},rep:60,counter:'unionWin',followers:80},lose:{reachMod:{mul:0.85,weeks:8},rep:-20,stress:10}},chance:0.55},log:'답변이 나왔다.'}]},
+ // ---------- 아크 D: 열성 팬 ----------
+ {id:'superfan',title:'열성 팬 "루나"',text:'매주 선물과 장문 댓글을 남기는 독자가 있다. DM으로 작품 설정집을 만들어도 되냐고 묻는다.',weight:1,once:true,need:['fans800','noflag:superfan_no'],options:[
+  {label:'소통한다',effects:{flag:'superfan',counter:'superfan',followers:30,stress:-5,schedule:[['superfan_mod',8]]},log:'루나와 친해졌다.'},
+  {label:'거리를 둔다',effects:{flag:'superfan_no',counter:'superfan'},log:'적당한 거리.'}]},
+ {id:'superfan_mod',title:'루나의 제안',text:'루나가 디스코드 서버 관리자를 자원했다. 악플 관리와 공지를 대신해 주겠다고.',chain:true,options:[
+  {label:'맡긴다',effects:{flag:'moderator',recoverPerm:3,schedule:[['superfan_turn',12]]},log:'루나가 관리자가 됐다. 매주 스트레스 -3.'},
+  {label:'직접 관리한다',effects:{stress:4,schedule:[['superfan_gift',10]]},log:'내 서버는 내가.'}]},
+ {id:'superfan_turn',title:'루나의 변화',text:'루나가 다른 팬들을 밀어내고 당신 작품의 "공식 해석"을 강요하기 시작했다. 서버가 조용해졌다.',chain:true,options:[
+  {label:'관리자 권한을 회수한다',effects:{unflag:'moderator',recoverPerm:-3,stress:12,followers:-40,relationFan:-1},log:'루나가 떠났다. 서버는 다시 시끄럽지만 자유롭다.'},
+  {label:'대화로 푼다',effects:{stress:8,coin:{win:{followers:40,stress:-10},lose:{followers:-100,stress:15,unflag:'moderator',recoverPerm:-3}},chance:0.6},log:'대화의 결과.'}]},
+ {id:'superfan_gift',title:'루나의 선물',text:'루나가 생일이라며 크래커 2만 개를 선물했다. 메시지: "작가님 덕분에 버텨요."',chain:true,options:[
+  {label:'감사 편지를 쓴다',effects:{gift:20000,stress:-12,followers:20},log:'선물 2만 크래커.'}]},
+ // ---------- 아크 F: 전업 선언 (직장인) ----------
+ {id:'quit_job',title:'퇴사할까',text:'정산이 월급을 넘보기 시작했다. 회사를 그만두면 체력이 늘지만 월급은 사라진다.',weight:2,once:true,need:['bg:worker','creator','noflag:fulltime'],options:[
+  {label:'퇴사한다',effects:{flag:'fulltime',salaryDelta:-280000,energyMaxDelta:25,stress:-10,inspiration:15,schedule:[['fulltime_doubt',16]]},log:'사직서 제출. 전업 크리에이터.'},
+  {label:'투잡을 유지한다',effects:{stress:4},log:'아직은 안전하게.'}]},
+ {id:'fulltime_doubt',title:'전업의 무게',text:'퇴사 4개월. 정산은 들쭉날쭉하고 부모님은 걱정한다. 다시 취업 제안이 왔다.',chain:true,options:[
+  {label:'창작에 집중한다',effects:{inspiration:20,stress:5,rep:10},log:'돌아가지 않는다.'},
+  {label:'재취업한다',effects:{unflag:'fulltime',salaryDelta:280000,energyMaxDelta:-25,stress:-5},log:'다시 투잡.'}]},
+ // ---------- 아크 G: IP 확장 ----------
+ {id:'webtoon_offer',title:'웹툰화 제안',text:'출판사가 당신 세계관의 웹툰화를 제안했다. 원작료는 적지만 노출은 거대하다.',weight:1,once:true,need:['flag:publisher','noflag:webtoon'],options:[
+  {label:'계약한다',effects:{flag:'webtoon',money:3000000,schedule:[['webtoon_launch',12]]},log:'웹툰 계약! 1년 뒤 연재.'},
+  {label:'직접 만들겠다',effects:{rep:20,inspiration:10},log:'내 IP는 내가.'}]},
+ {id:'webtoon_launch',title:'웹툰 연재 시작',text:'웹툰이 연재를 시작했다. 원작 캐릭터 챗으로 독자가 몰려온다.',chain:true,options:[
+  {label:'원작 작품을 업데이트한다',effects:{reachMod:{mul:1.6,weeks:4},followers:600,rep:120,counter:'webtoon'},log:'웹툰 효과로 유입 폭증.'}]},
+ // ---------- 아크 H: 오리지널 분쟁 ----------
+ {id:'original_dispute',title:'오리지널 수정 요청',text:'플랫폼이 오리지널 작품의 특정 전개를 "브랜드 가이드에 맞지 않는다"며 수정을 요청했다.',weight:2,once:true,need:'originals1',options:[
+  {label:'수정한다 (체력 -20)',effects:{energy:-20,workPoints:{story:-3},rep:10},log:'수정 완료. 원작의 맛은 조금 줄었다.'},
+  {label:'창작의 자유를 주장한다',effects:{stress:12,schedule:[['original_dispute_end',4]]},log:'거부했다.'}]},
+ {id:'original_dispute_end',title:'분쟁의 결말',text:'플랫폼 심의 결과가 나왔다.',chain:true,options:[
+  {label:'확인',effects:{coin:{win:{rep:60,followers:100},lose:{rep:-30,reachMod:{mul:0.7,weeks:4}}},chance:0.5},log:'결과.'}]},
+ // ---------- 아크 I: 번아웃 회복 ----------
+ {id:'therapy',title:'상담을 받아볼까',text:'번아웃 이후 손이 떨린다. 지인이 창작자 상담 프로그램을 추천했다. 10주 과정, 50만원.',weight:2,once:true,need:['burnout1','noflag:therapy'],options:[
+  {label:'등록한다 (-50만원)',effects:{money:-500000,flag:'therapy',recoverPerm:4,stress:-15},log:'상담 시작. 매주 스트레스 회복 +4.'},
+  {label:'혼자 이겨낸다',effects:{stress:5},log:'...괜찮아.'}]},
+ // ---------- 아크 J: 해외 진출 ----------
+ {id:'overseas_agent',title:'해외 에이전시',text:'일본 서비스 캬라푸의 에이전시가 번역 연재를 제안했다. 번역비 선투자 100만원, 해외 정산 별도.',weight:1,once:true,need:['only','noflag:overseas'],options:[
+  {label:'투자한다 (-100만원)',effects:{money:-1000000,flag:'overseas',schedule:[['overseas_result',8]]},log:'번역 작업 시작.'},
+  {label:'보류',effects:{},log:'국내에 집중.'}]},
+ {id:'overseas_result',title:'해외 연재 결과',text:'캬라푸 연재 2개월 결산.',chain:true,options:[
+  {label:'확인',effects:{coin:{win:{money:3500000,followers:400,rep:80,counter:'overseasHit'},lose:{money:600000,followers:50}},chance:0.5},log:'해외 정산 도착.'}]},
+ // ---------- 아크 K: 라이벌 불화 ----------
+ {id:'feud_start',title:'{rival}와(과)의 불화',text:'{rival} 작가가 당신 신작 태그가 자기 작품을 베꼈다고 공개 저격했다.',weight:1,once:true,need:['published','rep100','noflag:feud'],options:[
+  {label:'공개 반박',effects:{flag:'feud',relation:-40,rep:15,stress:12,schedule:[['feud_peak',6]]},log:'설전 시작.'},
+  {label:'DM으로 푼다',effects:{relation:15,stress:5},log:'오해를 풀었다.'}]},
+ {id:'feud_peak',title:'불화의 절정',text:'양쪽 팬덤이 갤러리에서 매일 싸운다. {rival}가 "같은 대회에서 보자"고 했다.',chain:true,options:[
+  {label:'대회에서 실력으로 증명한다',effects:{inspiration:20,stress:8,schedule:[['feud_end',8]]},log:'대회를 준비한다.'},
+  {label:'공개 화해 제안',effects:{relation:40,unflag:'feud',rep:20,stress:-10},log:'악수했다.'}]},
+ {id:'feud_end',title:'불화의 끝',text:'대회가 끝났다. {rival}가 DM을 보냈다. "...잘 봤습니다."',chain:true,options:[
+  {label:'화해한다',effects:{relation:50,unflag:'feud',rep:30,followers:80},log:'라이벌에서 동료로.'},
+  {label:'끝까지 간다',effects:{relation:-60,rep:10,stress:10},log:'영원한 라이벌.'}]},
+ // ---------- 경력 분기점 (시스템 예약) ----------
+ {id:'creator_path',title:'크리에이터 노선 선택',text:'정식 크리에이터가 됐다. 앞으로의 방향을 정하자. 되돌릴 수 없다.',chain:true,options:[
+  {label:'다작 노선: 제작 슬롯 +1, 포인트 -5%',effects:{flag:'path_many',counter:'path'},log:'다작 노선.'},
+  {label:'완성도 노선: 포인트 +15%, 진행 -10%',effects:{flag:'path_quality',counter:'path'},log:'완성도 노선.'},
+  {label:'커뮤니티 노선: 팔로워 +25%, 홍보 스트레스 절반',effects:{flag:'path_social',counter:'path'},log:'커뮤니티 노선.'}]},
+ {id:'new_year',title:'새해 다짐',text:'한 해가 지났다. 올해의 다짐은?',chain:true,options:[
+  {label:'건강: 최대 체력 +5',effects:{energyMaxDelta:5},log:'건강하게.'},
+  {label:'야망: 유입 +5%',effects:{exposurePerm:1.05},log:'더 높이.'},
+  {label:'절약: 지출 -5%',effects:{costPerm:0.95},log:'알뜰하게.'},
+  {label:'휴식: 스트레스 -30, 영감 +20',effects:{stress:-30,inspiration:20},log:'쉬어가기.'}]},
+ {id:'midcareer',title:'중간 회고',text:'경력의 절반이 지났다. 돌아보면 무엇이 보이는가?',chain:true,options:[
+  {label:'작품이 보인다: 모든 공개작 안정성 +3',effects:{workPoints:{stability:3}},log:'작품을 돌봤다.'},
+  {label:'사람이 보인다: 팔로워 +150, 라이벌 관계 +10',effects:{followers:150,relationAll:10},log:'관계를 돌봤다.'},
+  {label:'돈이 보인다: +100만원',effects:{money:1000000},log:'통장을 돌봤다.'}]},
+ // ---------- 시즌 ----------
+ {id:'lunar',title:'설 연휴',text:'명절. 친척들이 모였다. "그 AI 캐릭터 만드는 거 돈은 좀 되니?"',weight:3,need:'month:1',options:[
+  {label:'세뱃돈을 받는다',effects:{money:150000,stress:5},log:'세뱃돈 +15만원.'},
+  {label:'명절 특별 이벤트를 연다',effects:{followers:40,energy:-15},log:'명절 이벤트.'}]},
+ {id:'spring_semester',title:'신학기',text:'3월. 학생 독자들이 바빠졌다. 2주간 학원물 유입이 줄고 오피스물이 는다.',weight:3,need:'month:3',options:[
+  {label:'그렇구나',effects:{reachMod:{mul:0.9,weeks:2}},log:'신학기 효과.'}]},
+ {id:'summer_vacation',title:'여름 방학',text:'7월. 학생 독자가 폭증한다. 4주간 유입 +25%.',weight:4,need:'month:7',options:[
+  {label:'신작 타이밍!',effects:{reachMod:{mul:1.25,weeks:4},counter:'summer'},log:'여름 특수.'}]},
+ {id:'monsoon',title:'장마',text:'비가 열흘째. 습하고 처진다.',weight:3,need:'month:7',options:[
+  {label:'집에서 작업',effects:{stress:6,inspiration:6},log:'빗소리.'}]},
+ {id:'chuseok',title:'추석',text:'9월 추석. 선물 이벤트를 열기 좋은 시기다.',weight:3,need:'month:9',options:[
+  {label:'추석 선물 이벤트 (-10만원)',effects:{money:-100000,followers:60,gift:2000},log:'추석 이벤트.'},
+  {label:'쉰다',effects:{stress:-15},log:'송편.'}]},
+ {id:'yearend_gift',title:'연말 선물 러시',text:'12월. 독자들이 한 해 감사 선물을 보낸다.',weight:4,need:'month:12',options:[
+  {label:'감사 인사',effects:{gift:5000,followers:30,stress:-8},log:'연말 선물 러시.'}]},
+ {id:'exam_season',title:'수능 시즌',text:'11월. 수험생 독자들이 사라졌다. 2주간 유입 -15%.',weight:3,need:'month:11',options:[
+  {label:'응원 메시지를 올린다',effects:{reachMod:{mul:0.85,weeks:2},followers:20},log:'수험생 응원.'}]},
+ {id:'blackfriday',title:'크래커 할인 주간',text:'플랫폼이 크래커 할인 행사를 열었다. 2주간 유료 소비 +30%.',weight:2,need:'month:11',options:[
+  {label:'좋은 타이밍',effects:{payMod:{mul:1.3,weeks:2}},log:'크래커 할인 효과.'}]},
+ {id:'anniversary',title:'플랫폼 창립 기념',text:'창립 기념 이벤트로 모든 작품 노출이 늘고 선물 보너스가 붙는다.',weight:2,need:'month:5',options:[
+  {label:'기념 이벤트 참여',effects:{reachMod:{mul:1.2,weeks:2},gift:1500},log:'기념 이벤트.'}]},
+ // ---------- 플랫폼·기술 ----------
+ {id:'model_regress',title:'모델 퇴행 논란',text:'새 모델이 오히려 멍청해졌다는 불만이 폭주한다. 2주간 재방문이 줄어든다.',weight:2,need:'published',options:[
+  {label:'유저노트 가이드를 올린다',effects:{workPoints:{stability:-2},followers:15},log:'가이드로 대응.'}]},
+ {id:'image_model',title:'새 이미지 모델',text:'이미지 생성 모델이 업그레이드됐다. 이번 주 미디어 작업 비주얼 포인트 2배.',weight:2,options:[
+  {label:'바로 작업한다',effects:{visualBoost:1,inspiration:5},log:'이번 주 비주얼 작업 강화.'}]},
+ {id:'token_limit',title:'프롬프트 글자 수 확대',text:'프롬프트 상한이 7,000자에서 10,000자로 늘었다. 커스텀 프롬 작품의 설정 유지가 좋아진다.',weight:1,once:true,options:[
+  {label:'설정을 보강한다 (체력 -15)',effects:{energy:-15,workPoints:{stability:4}},log:'공개작 안정성 +4.'}]},
+ {id:'search_update',title:'검색 개편',text:'해시태그 검색 가중치가 올라갔다. 이달 메타 태그 효과가 2배.',weight:2,options:[
+  {label:'태그를 손본다',effects:{tagBoost:4},log:'4주간 메타 태그 효과 2배.'}]},
+ {id:'ranking_reset',title:'랭킹 집계 방식 변경',text:'주간 랭킹이 발화 수에서 "신규 플레이 수" 가중으로 바뀌었다. 신작이 유리해졌다.',weight:1,options:[
+  {label:'신작을 준비한다',effects:{inspiration:8},log:'랭킹 개편.'}]},
+ {id:'outage_refund',title:'장애 보상',text:'플랫폼 장애 보상으로 모든 이용자에게 크래커가 지급됐다. 이번 주 소비가 늘어난다.',weight:2,options:[
+  {label:'타이밍',effects:{payMod:{mul:1.4,weeks:1}},log:'보상 크래커 효과.'}]},
+ {id:'bot_accounts',title:'봇 계정 정리',text:'플랫폼이 봇 계정을 대거 삭제했다. 팔로워가 줄어든 대신 집계가 정확해졌다.',weight:1,need:'fans500',options:[
+  {label:'받아들인다',effects:{followersPct:-0.05,rep:10},log:'팔로워 -5%.'}]},
+ {id:'verify_badge',title:'인증 배지',text:'플랫폼이 인지도 높은 제작자에게 인증 배지를 준다.',weight:1,once:true,need:'rep800',options:[
+  {label:'받는다',effects:{exposurePerm:1.05,rep:30},log:'인증 배지. 유입 +5%.'}]},
+ {id:'api_change',title:'이미지 코드 규격 변경',text:'이미지 코드 형식이 바뀌어 기존 미디어가 일부 깨진다.',weight:2,need:'published',options:[
+  {label:'전부 수정한다 (체력 -25)',effects:{energy:-25,stress:8},log:'수정 완료.'},
+  {label:'인기작만 수정한다 (체력 -10)',effects:{energy:-10,workPoints:{visual:-3}},log:'일부 작품 비주얼 하락.'}]},
+ // ---------- 커뮤니티 ----------
+ {id:'tier_list',title:'작품 티어표',text:'갤러리에 이달의 작품 티어표가 올라왔다. 당신 작품이 {tier}에 있다.',weight:2,need:'published',options:[
+  {label:'캡처해둔다',effects:{rep:8,stress:3},log:'티어표.'}]},
+ {id:'ama',title:'질문 받습니다',text:'팬들이 AMA(질문 답변)를 요청한다.',weight:2,need:'fans500',options:[
+  {label:'진행한다 (체력 -15)',effects:{energy:-15,followers:50,rep:15,stress:5},log:'AMA 성료.'},
+  {label:'다음에',effects:{},log:'다음에.'}]},
+ {id:'gallery_award',title:'갤러리 자체 시상',text:'갤러리에서 비공식 "갤 어워드"를 열었다. 당신이 "올해의 떡상" 부문 후보.',weight:1,need:'rep300',options:[
+  {label:'투표를 독려한다',effects:{coin:{win:{rep:50,followers:80},lose:{rep:5}},chance:0.45,stress:4},log:'갤 어워드 결과.'}]},
+ {id:'prompt_contest',title:'프롬 공유 대전',text:'갤러리에서 프롬프트 구조 공유 대회가 열렸다. 참여하면 서로의 노하우를 배운다.',weight:2,options:[
+  {label:'참여한다',effects:{skillXp:{prompt:40,planning:20},rep:10},log:'노하우 교환.'}]},
+ {id:'drama_screenshot',title:'DM 캡처 유출',text:'다른 제작자가 당신과 나눈 DM을 편집해 올렸다. 맥락이 왜곡됐다.',weight:1,need:'rep200',options:[
+  {label:'원본을 공개한다',effects:{rep:20,stress:10,relationRandom:-40},log:'원본 공개로 반전.'},
+  {label:'무시한다',effects:{rep:-20,stress:6},log:'소문이 돌았다.'}]},
+ {id:'newbie_help',title:'뉴비 질문글',text:'"처음 만드는데 키워드북이 뭔가요?" 글이 올라왔다.',weight:3,options:[
+  {label:'친절히 답한다',effects:{rep:6,skillXp:{community:10}},log:'뉴비를 도왔다.'},
+  {label:'스크롤',effects:{},log:'...'}]},
+ {id:'meme_contest',title:'짤 대회',text:'당신 캐릭터 짤 만들기 대회가 갤러리에서 자생적으로 열렸다.',weight:1,need:'hit',options:[
+  {label:'상품을 건다 (-5만원)',effects:{money:-50000,followers:120,rep:25},log:'짤 대회 흥행.'}]},
+ {id:'copy_tag',title:'태그 따라하기',text:'당신이 만든 태그 조합을 따라 한 작품들이 쏟아진다. 검색이 섞인다.',weight:2,need:'rep300',options:[
+  {label:'원조 표시를 한다',effects:{rep:15,reachMod:{mul:0.9,weeks:2}},log:'원조는 원조.'}]},
+ // ---------- 팬·독자 ----------
+ {id:'fan_translation',title:'팬 번역',text:'한 팬이 당신 작품 소개를 영어로 번역해 해외 커뮤니티에 올렸다.',weight:1,need:'fans1000',options:[
+  {label:'허락하고 감사한다',effects:{followers:90,rep:15},log:'해외 팬 유입.'}]},
+ {id:'fan_cosplay',title:'코스프레',text:'행사장에서 당신 캐릭터 코스프레가 등장했다. 사진이 돌고 있다.',weight:1,need:'fans2000',options:[
+  {label:'리트윗',effects:{followers:150,inspiration:10},log:'코스프레 바이럴.'}]},
+ {id:'fan_fic',title:'2차 창작 팬픽',text:'팬이 당신 세계관으로 2차 창작 캐릭터를 만들어 올렸다. 당신 작품 유입도 는다.',weight:2,need:'hit',options:[
+  {label:'공식 허용 가이드를 올린다',effects:{followers:60,rep:20},log:'2차 창작 허용.'},
+  {label:'내리도록 요청',effects:{rep:-15,stress:5},log:'내려달라고 했다.'}]},
+ {id:'reader_death',title:'한 독자의 부고',text:'오래 댓글을 남기던 독자의 가족이 부고를 전했다. "마지막까지 작가님 작품을 했어요."',weight:1,need:'fans1000',options:[
+  {label:'추모 글을 올린다',effects:{stress:10,inspiration:20,rep:10},log:'이야기는 누군가의 마지막을 함께했다.'}]},
+ {id:'minor_report',title:'미성년 독자 신고',text:'성인 작품에 미성년자가 접근했다는 신고가 들어왔다. 플랫폼 인증 문제지만 작품이 잠시 숨겨진다.',weight:2,need:'hasAdult',options:[
+  {label:'협조한다',effects:{adultMod:{mul:0.5,weeks:1},stress:5},log:'1주 노출 제한.'}]},
+ {id:'gift_whale2',title:'선물 랭킹 1위 독자',text:'선물 랭킹 1위 독자가 "작가님 전용 요청"을 한다. 특정 캐릭터의 분기를 추가해달라고.',weight:1,need:'fans1000',options:[
+  {label:'추가한다 (체력 -20)',effects:{energy:-20,gift:8000,followers:20},log:'요청 반영. 선물 8,000.'},
+  {label:'정중히 거절',effects:{rep:5},log:'작품은 모두의 것.'}]},
+ // ---------- 생활·건강·돈 ----------
+ {id:'rent_up',title:'월세 인상',text:'집주인이 월세를 올렸다.',weight:2,need:'studio1',options:[
+  {label:'받아들인다',effects:{rentPerm:1.1,stress:5},log:'임대료 +10%.'},
+  {label:'이사를 알아본다 (체력 -20)',effects:{energy:-20,stress:8},log:'발품을 팔았다.'}]},
+ {id:'wrist',title:'손목 터널 증후군',text:'진단이 나왔다. 당분간 작업량을 줄이라고 한다.',weight:1,need:'stress60',options:[
+  {label:'치료 (-40만원)',effects:{money:-400000,progressMod:{mul:0.85,weeks:3},stress:-10},log:'치료 중. 3주간 속도 -15%.'},
+  {label:'보호대로 버틴다',effects:{progressMod:{mul:0.7,weeks:4},stress:10},log:'4주간 속도 -30%.'}]},
+ {id:'power_out',title:'정전',text:'아파트 정전. 저장 안 한 작업이 날아갔다.',weight:2,options:[
+  {label:'...',effects:{draftProgress:-15,stress:10},log:'작업 일부 손실.'}]},
+ {id:'scam',title:'사기 DM',text:'"플랫폼 운영팀입니다. 정산 계좌 확인을 위해 링크를 눌러주세요."',weight:2,options:[
+  {label:'무시한다',effects:{rep:2},log:'피싱 회피.'},
+  {label:'링크를 누른다',effects:{money:-800000,stress:20},log:'...계좌에서 80만원이 빠져나갔다.'}]},
+ {id:'lottery2',title:'이벤트 추첨 당첨',text:'플랫폼 앱 리뷰 이벤트에 당첨됐다.',weight:1,options:[
+  {label:'받는다',effects:{money:200000},log:'+20만원.'}]},
+ {id:'old_friend',title:'옛 친구의 부탁',text:'오랜 친구가 급전 50만원을 빌려달라고 한다.',weight:1,options:[
+  {label:'빌려준다 (-50만원)',effects:{money:-500000,stress:-5,schedule:[['old_friend_return',12]]},log:'빌려줬다.'},
+  {label:'거절한다',effects:{stress:8},log:'미안.'}]},
+ {id:'old_friend_return',title:'친구의 답례',text:'친구가 돈을 갚으며 선물을 들고 왔다.',chain:true,options:[
+  {label:'고맙다',effects:{money:600000,stress:-10,inspiration:8},log:'+60만원과 영감.'}]},
+ {id:'move_offer',title:'작업실 공유 제안',text:'동료 제작자가 작업실을 함께 쓰자고 한다. 임대료를 나눈다.',weight:1,need:'studio1',options:[
+  {label:'함께 쓴다',effects:{rentPerm:0.7,stress:4,relationRandom:20},log:'임대료 -30%.'},
+  {label:'혼자가 편하다',effects:{},log:'혼자.'}]},
+ {id:'birthday',title:'생일',text:'생일이다. 팬들이 축하 댓글을 달았다.',weight:1,options:[
+  {label:'케이크를 산다',effects:{stress:-12,gift:1500,followers:15},log:'생일 축하.'}]},
+ {id:'pet_sick',title:'치즈가 아프다',text:'고양이 치즈가 밥을 안 먹는다.',weight:2,need:'cat',options:[
+  {label:'병원 (-30만원)',effects:{money:-300000,stress:-5},log:'다행히 괜찮았다.'},
+  {label:'지켜본다',effects:{stress:15},log:'...'}]},
+ {id:'coffee_spill',title:'키보드에 커피',text:'기계식 키보드에 커피를 쏟았다.',weight:2,need:'keyboard',options:[
+  {label:'수리 (-15만원)',effects:{money:-150000},log:'수리 완료.'},
+  {label:'그냥 쓴다',effects:{progressMod:{mul:0.9,weeks:2},stress:5},log:'키가 끈적인다.'}]},
+ // ---------- 라이벌 ----------
+ {id:'rival_quit',title:'{rival}의 은퇴 선언',text:'{rival} 작가가 번아웃으로 은퇴를 선언했다. 갤러리가 숙연해졌다.',weight:1,options:[
+  {label:'응원 댓글',effects:{relation:20,stress:5,inspiration:5},log:'동료의 은퇴.'}]},
+ {id:'rival_copy',title:'{rival}가 내 작품을 리메이크?',text:'{rival}의 신작이 내 작품과 설정이 너무 비슷하다.',weight:2,need:'published',options:[
+  {label:'정중히 문의',effects:{relation:-10,coin:{win:{rep:20},lose:{rep:-10,stress:8}},chance:0.6},log:'문의 결과.'},
+  {label:'신고한다',effects:{relation:-50,rep:10,stress:10},log:'신고.'},
+  {label:'넘어간다',effects:{stress:4},log:'...'}]},
+ {id:'rival_gift',title:'{rival}의 선물',text:'{rival} 작가가 당신 작품에 크래커를 선물했다. "리스펙."',weight:2,need:'relationGood',options:[
+  {label:'답례한다',effects:{gift:3000,relation:15},log:'서로 선물.'}]},
+ {id:'rival_team',title:'{rival}의 팀 제안',text:'{rival}가 제작 팀을 꾸리자고 한다. 수익은 나누고 작업은 분담한다.',weight:1,need:['relationGood','creator'],options:[
+  {label:'팀을 만든다',effects:{flag:'team',progressPerm:1.15,payPerm:0.9,relation:30,counter:'team'},log:'팀 결성. 진행 +15%, 정산 -10%.'},
+  {label:'혼자가 좋다',effects:{relation:-5},log:'솔로.'}]},
+ {id:'rival_poach',title:'{rival}의 팬 빼가기',text:'{rival}가 당신 팬들에게 자기 작품 홍보 DM을 돌리고 있다.',weight:2,need:'rep200',options:[
+  {label:'팬들에게 알린다',effects:{relation:-30,followers:-20,rep:10},log:'경고.'},
+  {label:'더 좋은 작품으로 답한다',effects:{inspiration:12,followers:-40},log:'실력으로.'}]},
+ {id:'rival_mentor',title:'{rival}의 멘토링',text:'{rival}가 당신 작품을 꼼꼼히 리뷰해줬다.',weight:2,need:'relationGood',options:[
+  {label:'감사',effects:{draftPoints:{stability:10,story:6},relation:10},log:'제작 중 작품 포인트 상승.'}]},
+ // ---------- 제작 ----------
+ {id:'eureka',title:'유레카',text:'샤워 중에 완벽한 분기 구조가 떠올랐다.',weight:3,need:'drafting',options:[
+  {label:'바로 적는다',effects:{draftPoints:{story:14},inspiration:-5},log:'제작 중 작품 서사 +14.'}]},
+ {id:'block',title:'슬럼프',text:'한 줄도 안 써진다.',weight:3,need:'drafting',options:[
+  {label:'쉬었다 한다',effects:{stress:-8,progressMod:{mul:0.8,weeks:1}},log:'1주 속도 -20%.'},
+  {label:'억지로 쓴다',effects:{stress:12,draftPoints:{stability:-4}},log:'억지로 쓴 글은 티가 난다.'}]},
+ {id:'beta_feedback',title:'베타 테스터의 혹평',text:'테스터가 "캐릭터가 매력 없다"고 했다.',weight:2,need:'drafting',options:[
+  {label:'반영한다 (체력 -15)',effects:{energy:-15,draftPoints:{appeal:12}},log:'매력을 손봤다.'},
+  {label:'내 비전을 믿는다',effects:{draftPoints:{story:4},stress:4},log:'고집.'}]},
+ {id:'scope_creep',title:'설정 과잉',text:'키워드북이 500줄을 넘었다. 프롬프트가 설정을 다 못 읽는다.',weight:2,need:'drafting',options:[
+  {label:'핵심만 남긴다',effects:{draftPoints:{stability:8,story:-3}},log:'다이어트.'},
+  {label:'다 넣는다',effects:{draftPoints:{story:8,stability:-8}},log:'세계관 과식.'}]},
+ {id:'name_clash',title:'이름 겹침',text:'당신 캐릭터 이름이 인기작 캐릭터와 똑같다. 검색이 섞인다.',weight:2,need:'drafting',options:[
+  {label:'이름을 바꾼다',effects:{draftProgress:-10,draftPoints:{appeal:5}},log:'개명.'},
+  {label:'그대로 간다',effects:{draftPoints:{appeal:-5}},log:'검색 혼선.'}]},
+ {id:'template_update',title:'템플릿 업데이트',text:'기본 템플릿이 개선됐다. 기본 템플릿 작품의 상한이 조금 올랐다.',weight:1,once:true,options:[
+  {label:'확인',effects:{workPoints:{story:2}},log:'템플릿 개선.'}]},
+ // ---------- 난이도 특화 악재 ----------
+ {id:'audit',title:'정산 감사',text:'플랫폼이 비정상 트래픽 의심으로 정산을 감사한다. 결과가 나올 때까지 이번 달 캐시가 동결된다.',weight:2,need:['creator','diff:hard'],options:[
+  {label:'협조한다',effects:{delaySettle:1,stress:10},log:'정산 동결.'}]},
+ {id:'mass_block',title:'대량 차단 사태',text:'정책 오탐으로 수백 작품이 차단됐다. 당신 작품도 포함됐다. 복구까지 1주.',weight:2,need:['published','diff:hard'],options:[
+  {label:'이의 제기',effects:{reachMod:{mul:0.3,weeks:1},stress:12},log:'1주 노출 급감.'}]},
+ {id:'competitor_app',title:'경쟁 앱 출시',text:'대형 경쟁 앱이 론칭했다. 독자가 분산된다. 8주간 유입 -15%.',weight:1,need:'diff:hard',once:true,options:[
+  {label:'버틴다',effects:{reachMod:{mul:0.85,weeks:8}},log:'경쟁 앱 효과.'}]},
+ {id:'loan_call',title:'대출 상환',text:'은행이 대출 상환을 요구했다.',weight:2,need:['diff:hard','money_low'],options:[
+  {label:'갚는다 (-50만원)',effects:{money:-500000,stress:8},log:'상환.'},
+  {label:'연장 요청',effects:{stress:15,rentPerm:1.05},log:'이자가 늘었다.'}]},
+];
+export const TROPHIES_EXTRA=[
+ // 작품·발화
+ {id:'works5',name:'다섯 번째 작품',desc:'작품 5개 등록',cond:'works>=5'},
+ {id:'works25',name:'작품 25개',desc:'작품 25개 등록',cond:'works>=25'},
+ {id:'works50',name:'작품 50개',desc:'작품 50개 등록. 공장장.',cond:'works>=50'},
+ {id:'story5',name:'스토리텔러',desc:'스토리 5개 공개',cond:'stories>=5'},
+ {id:'char10',name:'캐릭터 메이커',desc:'캐릭터 10개 공개',cond:'characters>=10'},
+ {id:'msg10k',name:'첫 1만 발화',desc:'누적 발화 1만',cond:'messages>=10000'},
+ {id:'msg1m',name:'백만 발화',desc:'누적 발화 100만',cond:'messages>=1000000'},
+ {id:'msg10m',name:'천만 발화',desc:'누적 발화 1,000만',cond:'messages>=10000000'},
+ {id:'players10k',name:'만 명의 독자',desc:'누적 대화 유저 1만',cond:'players>=10000'},
+ {id:'players100k',name:'십만 명의 독자',desc:'누적 대화 유저 10만',cond:'players>=100000'},
+ {id:'hitwork',name:'히트작',desc:'한 작품 발화 10만',cond:'maxWorkMsgs>=100000'},
+ {id:'megahit',name:'메가히트',desc:'한 작품 발화 100만',cond:'maxWorkMsgs>=1000000'},
+ {id:'likes1k',name:'좋아요 천 개',desc:'한 작품 좋아요 1,000',cond:'maxLikes>=1000'},
+ {id:'comments1k',name:'댓글 천 개',desc:'한 작품 댓글 1,000',cond:'maxComments>=1000'},
+ {id:'quality90',name:'완성도 90',desc:'완성도 90 이상 작품',cond:'maxQuality>=90'},
+ {id:'quality100',name:'완벽',desc:'완성도 100 작품',cond:'maxQuality>=100'},
+ {id:'volume5',name:'풀 볼륨',desc:'선택 탭을 전부 채운 스토리',cond:'maxVolume>=5'},
+ {id:'allforms',name:'형태 마스터',desc:'대화 형태 4종 모두 공개',cond:'forms>=4'},
+ {id:'bothtargets',name:'양손잡이',desc:'여성향·남성향 모두 공개',cond:'targets>=2'},
+ {id:'genres10',name:'장르 수집가',desc:'10개 장르로 공개',cond:'genres>=10'},
+ {id:'adult1',name:'성인 인증',desc:'성인 작품 첫 공개',cond:'adultWorks>=1'},
+ {id:'fanwork1',name:'2차 창작자',desc:'2차 창작 작품 공개',cond:'fanworks>=1'},
+ {id:'hyper1',name:'하이퍼 전용',desc:'하이퍼챗 권장 작품 공개',cond:'hyperWorks>=1'},
+ {id:'long5x',name:'대하소설',desc:'답변 길이 5x 작품 공개',cond:'longWorks>=1'},
+ {id:'tests10',name:'테스트 중독',desc:'비공개 테스트 10회',cond:'tests>=10'},
+ {id:'helpers10',name:'외주 큰손',desc:'외주 10회',cond:'helpers>=10'},
+ {id:'updates20',name:'패치노트',desc:'업데이트 20회',cond:'updates>=20'},
+ {id:'crits50',name:'영감의 화신',desc:'영감 폭발 50회',cond:'crits>=50'},
+ {id:'scrap3',name:'버릴 줄 아는 용기',desc:'제작 취소 3회',cond:'scrapped>=3'},
+ {id:'sequel3',name:'시리즈 작가',desc:'후속작 3개 승인',cond:'sequels>=3'},
+ // 팔로워·인지도·돈
+ {id:'fans100',name:'첫 100명',desc:'팔로워 100',cond:'followers>=100'},
+ {id:'fans5k',name:'팔로워 5,000',desc:'팔로워 5,000',cond:'followers>=5000'},
+ {id:'fans50k',name:'팔로워 50,000',desc:'팔로워 50,000',cond:'followers>=50000'},
+ {id:'rep100',name:'얼굴이 알려지다',desc:'인지도 100',cond:'rep>=100'},
+ {id:'rep1000',name:'네임드',desc:'인지도 1,000',cond:'rep>=1000'},
+ {id:'rep3000',name:'전설',desc:'인지도 3,000',cond:'rep>=3000'},
+ {id:'money10m',name:'천만원',desc:'자금 1,000만원',cond:'money>=10000000'},
+ {id:'money100m',name:'억대 작가',desc:'자금 1억',cond:'money>=100000000'},
+ {id:'settle100k',name:'첫 정산',desc:'누적 정산 10만원',cond:'settled>=100000'},
+ {id:'settle100m',name:'누적 정산 1억',desc:'누적 정산 1억',cond:'settled>=100000000'},
+ {id:'gifts10k',name:'선물 1만',desc:'누적 선물 1만 크래커',cond:'gifts>=10000'},
+ {id:'gifts100k',name:'선물 10만',desc:'누적 선물 10만 크래커',cond:'gifts>=100000'},
+ {id:'debt',name:'빚쟁이',desc:'자금이 마이너스',cond:'money<=-1'},
+ {id:'comeback',name:'재기',desc:'마이너스 자금에서 100만원으로 회복',cond:'comeback>=1'},
+ // 랭킹·대회
+ {id:'rank10',name:'TOP 10',desc:'주간 랭킹 10위 안',cond:'bestRank<=10'},
+ {id:'rank3',name:'TOP 3',desc:'주간 랭킹 3위 안',cond:'bestRank<=3'},
+ {id:'weekly10',name:'10주 1위',desc:'주간 1위 10회',cond:'weekly1>=10'},
+ {id:'monthly3',name:'월간 3관왕',desc:'월간 1위 3회',cond:'monthly1>=3'},
+ {id:'hot5',name:'핫 메이커',desc:'반응 뜨거운 신작 5회',cond:'hot>=5'},
+ {id:'contest3',name:'공모전 단골',desc:'공모전 입상 3회',cond:'contestWins>=3'},
+ {id:'contest10',name:'공모전 사냥꾼',desc:'공모전 입상 10회',cond:'contestWins>=10'},
+ {id:'awards3',name:'어워드 3관왕',desc:'연말 어워드 3회 수상',cond:'awards>=3'},
+ {id:'only3',name:'온리 전문',desc:'크랙 온리 3회',cond:'only>=3'},
+ {id:'orig3',name:'오리지널 3편',desc:'오리지널 3편',cond:'originals>=3'},
+ {id:'orig5',name:'오리지널 5편',desc:'오리지널 5편',cond:'originals>=5'},
+ {id:'buyout_win',name:'매입 대회 수상',desc:'집중 매입 대회 입상',cond:'buyoutWin>=1'},
+ // 성장·생활
+ {id:'skill5',name:'역량 Lv.5',desc:'한 역량 Lv.5',cond:'skillMax>=5'},
+ {id:'skill10',name:'역량 Lv.10',desc:'한 역량 Lv.10',cond:'skillMax>=10'},
+ {id:'allskill10',name:'만렙',desc:'모든 역량 Lv.10',cond:'skillMin>=10'},
+ {id:'items10',name:'장비 수집가',desc:'장비 10개',cond:'items>=10'},
+ {id:'allitems',name:'풀 세팅',desc:'모든 장비 보유',cond:'items>=20'},
+ {id:'subs4',name:'구독 부자',desc:'동시 구독 4개',cond:'subs>=4'},
+ {id:'studio2',name:'오피스텔 입주',desc:'오피스텔 이상',cond:'studio>=2'},
+ {id:'studio3',name:'스튜디오 입주',desc:'크리에이터 스튜디오 이상',cond:'studio>=3'},
+ {id:'stress0',name:'무념무상',desc:'스트레스 0으로 주 마감',cond:'stress<=0'},
+ {id:'stress100',name:'한계 돌파',desc:'스트레스 100 도달',cond:'maxStress>=100'},
+ {id:'burnout2',name:'두 번째 번아웃',desc:'번아웃 2회',cond:'burnouts>=2'},
+ {id:'jobs20',name:'생활인',desc:'부업 20회',cond:'jobs>=20'},
+ {id:'walk20',name:'산책 애호가',desc:'산책 20회',cond:'walks>=20'},
+ {id:'promo50',name:'홍보 머신',desc:'홍보 50회',cond:'promos>=50'},
+ {id:'gallery20',name:'갤러리 단골',desc:'갤러리 홍보탭 20회',cond:'gallery>=20'},
+ {id:'events50',name:'파란만장',desc:'이벤트 50회 경험',cond:'events>=50'},
+ {id:'events150',name:'인생 드라마',desc:'이벤트 150회 경험',cond:'events>=150'},
+ {id:'chain3',name:'분기점의 주인',desc:'아크 이벤트 3개 완료',cond:'arcs>=3'},
+ {id:'friends3',name:'인맥왕',desc:'우호 라이벌 3명',cond:'friends>=3'},
+ {id:'enemies3',name:'적을 만드는 재주',desc:'적대 라이벌 3명',cond:'enemies>=3'},
+ {id:'sanction1',name:'경고장',desc:'제재 1회',cond:'sanctions>=1'},
+ {id:'speedrun',name:'스피드런',desc:'24주 안에 크리에이터',cond:'creatorWeek<=24'},
+ {id:'year1creator',name:'1년차 크리에이터',desc:'1년차에 크리에이터',cond:'creatorWeek<=48'},
+ {id:'nopromo',name:'입소문',desc:'홍보 0회로 TOP 10',cond:'bestRank<=10&&promos<=0'},
+ {id:'hard_clear',name:'하드 클리어',desc:'하드 이상으로 완주',cond:'hardClear>=1'},
+ {id:'nightmare_clear',name:'지옥 클리어',desc:'지옥으로 완주',cond:'nightmareClear>=1'},
+ {id:'legacy20',name:'유산 20',desc:'유산 누적 20',cond:'legacyTotal>=20'},
+ {id:'runs3',name:'3회차',desc:'회차 3번 완주',cond:'runs>=3'},
+ {id:'insights_all',name:'플랫폼 전문가',desc:'인사이트 전부 발견',cond:'insightsAll>=1'},
+ {id:'endings6',name:'엔딩 수집가',desc:'엔딩 6종',cond:'endings>=6'},
+];
+// 기본 배열에 병합
+EVENTS.push(...EVENTS_EXTRA);ITEMS.push(...ITEMS_EXTRA);SUBSCRIPTIONS.push(...SUBSCRIPTIONS_EXTRA);JOBS.push(...JOBS_EXTRA);LIFE.push(...LIFE_EXTRA);HELPERS.push(...HELPERS_EXTRA);TAGS.push(...TAGS_EXTRA);INSIGHTS.push(...INSIGHTS_EXTRA);LEGACY_SHOP.push(...LEGACY_EXTRA);TROPHIES.push(...TROPHIES_EXTRA);
+ENDINGS.splice(ENDINGS.length-1,0,...ENDINGS_EXTRA);

@@ -19,12 +19,15 @@ export const initial=()=>({version:5,theme:'dark',meta:{legacy:0,unlocks:[],endi
 export function migrate(s){
  if(!s||typeof s!=='object')return initial();
  if(s.version!==5){const fresh=initial();if(s.meta?.runs?.length||s.run)fresh.meta.legacy=Math.max(1,Number(s.meta?.legacy)||0);return fresh;}
- if(s.run){const r=s.run;r.feed??=[];r.contest??=null;r.contestHistory??=[];r.awards??=[];r.stats.contestWins??=0;}
+ if(s.run){const r=s.run;r.feed??=[];r.contest??=null;r.contestHistory??=[];r.awards??=[];r.stats.contestWins??=0;r.difficulty??='normal';r.perm??={pay:1,exposure:1,cost:1,rent:1,progress:1,recover:0,salary:0,energy:0};r.scheduled??=[];r.stats.maxStress??=0;}
+ s.meta.legacyEarned??=s.meta.legacy;
  s.meta.insights??=[];s.meta.archive??=[];s.meta.trophies??=[];s.meta.endings??=[];s.meta.runs??=[];s.meta.unlocks??=[];
  return s;
 }
 export function has(s,unlock){return s.meta.unlocks.includes(unlock);}
-export const creatorReq=s=>{const half=has(s,'creator_fast')?0.5:1;return {works:R(D.CREATOR_REQ.works*half),players:R(D.CREATOR_REQ.players*half),followers:R(D.CREATOR_REQ.followers*half),messages:R(D.CREATOR_REQ.messages*half)};};
+export const diffOf=r=>D.DIFFICULTIES.find(d=>d.id===(r?.difficulty||'normal'))||D.DIFFICULTIES[1];
+export function difficultyAvailable(s,id){if(id!=='nightmare')return true;return has(s,'nightmare_unlock')||s.meta.runs.some(x=>x.difficulty==='hard'||x.difficulty==='nightmare');}
+export const creatorReq=s=>{const half=(has(s,'creator_fast')?0.5:1)*diffOf(s.run).req;return {works:Math.max(3,R(D.CREATOR_REQ.works*half)),players:R(D.CREATOR_REQ.players*half),followers:R(D.CREATOR_REQ.followers*half),messages:R(D.CREATOR_REQ.messages*half)};};
 export const creatorStageName=st=>['일반 제작자','크리에이터 미션 진행 중','크리에이터'][st];
 export function repTier(f){return f>=2500?'전설':f>=1200?'네임드':f>=500?'인기 제작자':f>=150?'주목받는 신인':f>=30?'신인':'무명';}
 function modMul(r,key){return (r.mods[key]||[]).reduce((a,m)=>a*m.mul,1);}
@@ -35,21 +38,23 @@ export function derive(s){
  const bg=byId(D.BACKGROUNDS,r.background)||D.BACKGROUNDS[0];const studio=D.STUDIOS[r.studio];const items=r.items.map(id=>byId(D.ITEMS,id)).filter(Boolean);
  const t=id=>r.traits.includes(id);const sum=k=>items.reduce((a,i)=>a+(i.effect[k]||0),0);
  const level=Math.floor(Math.sqrt(r.xp/60))+1;
- const energyMax=bg.energy+studio.energy+sum('energy')+(t('owl')?15:0)+(r.energyBonus||0);
- const slots=studio.slots+(t('twoslots')?1:0);
+ const diff=diffOf(r);const perm=r.perm;const f=k=>r.flags[k];
+ const energyMax=Math.max(40,bg.energy+studio.energy+sum('energy')+(t('owl')?15:0)+(r.energyBonus||0)+diff.energy+perm.energy);
+ const slots=studio.slots+(t('twoslots')?1:0)+(f('path_many')?1:0);
  const crit=0.06+r.inspiration/500+sum('crit')+(t('lucky')?0.05:0);
- const costMul=t('thrifty')?0.85:1;
+ const costMul=(t('thrifty')?0.85:1)*diff.cost*perm.cost;
  const genres=D.GENRES.filter(g=>has(s,'all_genres')||g.unlock<=r.skills.planning);
  const statMul={story:1+sum('storyMul'),stability:1+sum('stabilityMul')+(t('lorekeeper')?0.2:0),visual:1+sum('visualMul')+(t('visualist')?0.25:0)+(r.subs.includes('imagegen')?0.15:0),appeal:1+sum('appealMul')};
- const pointMul=(t('perfectionist')?1.15:1)*(t('prolific')?0.92:1);
- const progressMul=(t('perfectionist')?0.85:1)*(t('prolific')?1.2:1)*modMul(r,'progress');
+ const pointMul=(t('perfectionist')?1.15:1)*(t('prolific')?0.92:1)*(f('path_quality')?1.15:1)*(f('path_many')?0.95:1);
+ const progressMul=(t('perfectionist')?0.85:1)*(t('prolific')?1.2:1)*(f('path_quality')?0.9:1)*perm.progress*modMul(r,'progress');
  const trainCost=sk=>R(80000*Math.pow(r.skills[sk],1.5)*costMul);
  const helperMul=(r.studio>=3?0.8:1)*costMul*(bg.id==='illustrator'?0.5:1);
- const recover=10+studio.recover+sum('recover');
+ const recover=10+studio.recover+sum('recover')+perm.recover;
  const inspirationWeekly=5+sum('inspiration')+(t('muse')?12:0);
  const req=creatorReq(s);
  const settleRate=r.creatorStage>=2?D.SETTLE_RATE.base:0;
- return {level,energyMax,slots,crit,costMul,genres,statMul,pointMul,progressMul,progressBonus:sum('progress'),trainCost,helperMul,recover,inspirationWeekly,studio,bg,weeksLeft:r.careerWeeks-r.week+1,repTier:repTier(r.rep),req,settleRate,canSeeTrend:r.subs.includes('trend')||r.skills.community>=4};
+ const insightMul=has(s,'insight_bonus')?1+Math.min(0.25,s.meta.insights.length*0.01):1;
+ return {level,energyMax,slots,crit,costMul,genres,statMul,pointMul,progressMul,progressBonus:sum('progress'),mediaProgress:sum('mediaProgress'),workStress:sum('workStress'),readBonus:sum('readBonus'),awardRep:sum('awardRep'),promoMul:1+sum('promoMul'),backup:sum('backup')>0||r.subs.includes('insurance'),trainCost,helperMul,recover,inspirationWeekly,studio,bg,diff,salary:(bg.salary||0)+perm.salary,rent:R(studio.rent*perm.rent),exposureMul:diff.exposure*perm.exposure*insightMul,settleMul:diff.settle*perm.pay,weeksLeft:r.careerWeeks-r.week+1,repTier:repTier(r.rep),req,settleRate,canSeeTrend:r.subs.includes('trend')||r.skills.community>=4};
 }
 
 // 공개 시 능력치 계산 (예측·실제 동일, 실제는 소량 노이즈)
@@ -73,8 +78,8 @@ export function applicableModules(d){return D.MODULE_ORDER.filter(m=>!D.MODULES[
 export const workRisk=w=>(byId(D.IMAGE_SOURCES,w.imageSource)?.risk||0)+(byId(D.ORIGINS,w.origin)?.risk||0)+(byId(D.AUDIENCES,w.audience)?.risk||0);
 
 function spend(s,money,energy){const r=s.run,dv=derive(s);money=R(money*dv.costMul);if(r.energy<energy)throw Error(`체력이 부족해요. (필요 ${energy}, 보유 ${r.energy})`);if(money>0&&r.money<money)throw Error(`자금이 부족해요. (필요 ${money.toLocaleString('ko-KR')}원)`);r.money-=money;r.energy-=energy;return money;}
-function addStress(r,n){if(n>0&&r.traits.includes('steel'))n*=0.7;r.stress=clamp(R(r.stress+n));}
-function addFollowers(r,n){if(n>0&&r.traits.includes('social'))n*=1.3;r.followers=Math.max(0,R(r.followers+n));}
+function addStress(r,n){if(n>0&&r.traits.includes('steel'))n*=0.7;if(n>0)n*=diffOf(r).stress;r.stress=clamp(R(r.stress+n));if(r.stress>r.stats.maxStress)r.stats.maxStress=r.stress;}
+function addFollowers(r,n){if(n>0&&r.traits.includes('social'))n*=1.3;if(n>0&&r.flags.path_social)n*=1.25;r.followers=Math.max(0,R(r.followers+n));}
 function addSkillXp(r,sk,n){r.skillXp[sk]+=n;while(r.skills[sk]<10&&r.skillXp[sk]>=skillNeed(r.skills[sk])){r.skillXp[sk]-=skillNeed(r.skills[sk]);r.skills[sk]++;log(r,`${D.SKILLS[sk].name} 역량이 Lv.${r.skills[sk]}이 되었다!`);}if(r.skills[sk]>=10)r.skillXp[sk]=0;}
 function log(r,msg){r.log.unshift(`[${calendar(Math.min(r.week,r.careerWeeks))}] ${msg}`);r.log=r.log.slice(0,60);}
 function notice(r,msg){r.notices.unshift({week:r.week,text:msg});r.notices=r.notices.slice(0,30);}
@@ -105,16 +110,18 @@ export function startRun(s,a){
  const traits=[...new Set((Array.isArray(a.traits)?a.traits:[a.traits]).filter(Boolean))];const maxTraits=has(s,'two_traits')?2:1;
  if(traits.length<1||traits.length>maxTraits)throw Error(`특성을 ${maxTraits}개 선택해 주세요.`);
  for(const id of traits){const t=byId(D.TRAITS,id);if(!t)throw Error('알 수 없는 특성이에요.');if(t.legacy>0&&!has(s,'tr_'+id))throw Error(`${t.name}은(는) 유산으로 해금해야 해요.`);}
+ const diff=D.DIFFICULTIES.find(d=>d.id===(a.difficulty||'normal'));if(!diff)throw Error('난이도를 선택해 주세요.');if(!difficultyAvailable(s,diff.id))throw Error('지옥 난이도는 하드 완주 또는 유산 해금 후 선택할 수 있어요.');
  const seed=typeof a.seed==='number'?a.seed|0:(hash(name+Date.now())|0);
- const r={name,background:bg.id,traits,week:1,careerWeeks:D.WEEKS_PER_YEAR*(has(s,'long_career')?5:D.CAREER_YEARS),rngState:seed,
-  money:bg.money+(has(s,'start_money')?2000000:0),pendingCash:0,settledTotal:0,energy:0,stress:10,inspiration:50,followers:(bg.followers||0)+(has(s,'start_fans')?500:0),rep:bg.rep||0,xp:0,energyBonus:0,
+ const r={name,background:bg.id,traits,difficulty:diff.id,perm:{pay:1,exposure:1,cost:1,rent:1,progress:1,recover:0,salary:0,energy:0},scheduled:[],week:1,careerWeeks:D.WEEKS_PER_YEAR*(has(s,'long_career')?5:D.CAREER_YEARS),rngState:seed,
+  money:R(bg.money*diff.money)+(has(s,'start_money')?2000000:0),pendingCash:0,settledTotal:0,energy:0,stress:10,inspiration:50,followers:(bg.followers||0)+(has(s,'start_fans')?500:0),rep:bg.rep||0,xp:0,energyBonus:0,
   skills:{planning:1,prompt:1,image:1,direction:1,community:1},skillXp:{planning:0,prompt:0,image:0,direction:0,community:0},
   studio:bg.studio||0,ownedStudios:[0,...(bg.studio?[bg.studio]:[])],items:[],subs:[],drafts:[],works:[],rivals:[],
   creatorStage:0,totals:{players:0,messages:0,publicWorks:0,crackers:0},trend:null,nextTrend:null,contestMonth:0,sanctions:0,
   mods:{},queue:[],report:null,ranking:{all:[],female:[],male:[]},monthly:null,statements:[],history:{followers:[],money:[],rep:[],messages:[]},
-  weekActions:{promos:{},jobs:{},nap:false,updates:{}},stats:{works:0,originals:0,only:0,burnouts:0,stressSum:0,weekly1:0,monthly1:0,bestRank:999,genres:[],hot:0,counters:{},contestWins:0},flags:{},log:[],notices:[],feed:[],contest:null,contestHistory:[],awards:[],ended:null};
+  weekActions:{promos:{},jobs:{},nap:false,updates:{}},stats:{works:0,originals:0,only:0,burnouts:0,stressSum:0,weekly1:0,monthly1:0,bestRank:999,genres:[],hot:0,counters:{},contestWins:0,maxStress:0,creatorWeek:0},flags:{},log:[],notices:[],feed:[],contest:null,contestHistory:[],awards:[],ended:null};
  for(const [k,v] of Object.entries(bg.skills||{}))r.skills[k]=v;if(has(s,'start_skill'))for(const k in r.skills)r.skills[k]=Math.min(10,r.skills[k]+1);
- r.rivals=Array.from({length:16},(_,i)=>makeRival(r,i));
+ r.rivals=Array.from({length:16},(_,i)=>makeRival(r,i));for(const rv of r.rivals)rv.power*=diff.rival;
+ if(has(s,'rival_friend'))for(const rv of r.rivals.slice(0,3))rv.relation=40;if(has(s,'start_item'))r.items.push('chair','notebook');if(diff.id==='hard'||diff.id==='nightmare')r.stats.counters.hard=1;
  r.trend=rollTrend(r);r.nextTrend=rollTrend(r);r.energy=derive({...s,run:r}).energyMax;
  s.run=r;openContest(s);log(r,`${name} 작가의 ${r.careerWeeks/D.WEEKS_PER_YEAR}년 도전이 시작됐다. 첫 작품을 만들어 보자!`);notice(r,'크리에이터가 되려면: 전체 공개 작품 10개 · 누적 대화 유저 1,000명 · 팔로워 500명을 채운 뒤 미션(누적 발화 10만)을 달성해야 해요. 그 전까진 선물(70%)과 부업이 수입이에요.');
  return s;
@@ -147,12 +154,12 @@ export function act(s,a){
  switch(type){
   case 'draft':return createDraft(s,a,dv);
   case 'work':return work(s,a,dv);
-  case 'hire':{const d=findDraft(r,a.id);const h=byId(D.HELPERS,a.helper);if(!h)throw Error('알 수 없는 외주예요.');if(d.helpers.includes(h.id))throw Error('이미 의뢰한 외주예요.');if(!applicableModules(d).includes(h.module))throw Error('이 작품 유형에는 해당 없는 외주예요.');spend(s,h.price*dv.helperMul/dv.costMul,5);d.helpers.push(h.id);d.modules[h.module]=Math.min(100,d.modules[h.module]+h.progress);d.points[h.stat]+=h.points;checkMilestone(r,d,h.module);log(r,`「${d.title}」 ${h.name} 완료.`);break;}
-  case 'test':{const d=findDraft(r,a.id);if(['profile','prompt','start'].some(m=>d.modules[m]<30))throw Error('필수 탭을 30% 이상 채운 뒤 비공개 테스트할 수 있어요.');const cost=byId(D.MODES,d.mode).crackers*40*D.WON_PER_CRACKER*(r.subs.includes('superpass')?0.5:1);spend(s,cost,10);d.tests++;d.points.stability+=5+(r.subs.includes('superpass')?3:0);const {stats}=assess(s,d);const weak=Object.entries(stats).sort((a,b)=>a[1]-b[1])[0][0];d.testNote={week:r.week,stats,weak,text:`비공개 테스트 #${d.tests} (크래커 ${byId(D.MODES,d.mode).crackers*40}개 소모): ${{story:'전개가 늘어진다. 시작 설정과 스탯·엔딩으로 사건을 만들자.',stability:'말투가 흔들리고 이름을 잊는다. 프롬프트 압축과 키워드북이 필요하다.',visual:'상황 이미지가 비어 보인다. 미디어 탭을 채우자.',appeal:'소개·태그가 작품을 설명하지 못한다. 등록 탭을 다듬자.'}[weak]} 안정성 포인트 +${5+(r.subs.includes('superpass')?3:0)}.`};addSkillXp(r,'prompt',6);log(r,`「${d.title}」 비공개 테스트 완료.`);break;}
-  case 'scrap':{const d=findDraft(r,a.id);r.drafts=r.drafts.filter(x=>x.id!==d.id);addStress(r,-5);log(r,`「${d.title}」 제작을 접었다. 다음엔 더 잘할 수 있다.`);break;}
+  case 'hire':{const d=findDraft(r,a.id);const h=byId(D.HELPERS,a.helper);if(!h)throw Error('알 수 없는 외주예요.');if(d.helpers.includes(h.id))throw Error('이미 의뢰한 외주예요.');if(!applicableModules(d).includes(h.module))throw Error('이 작품 유형에는 해당 없는 외주예요.');spend(s,h.price*dv.helperMul/dv.costMul,5);d.helpers.push(h.id);bump(s,'helpers');d.modules[h.module]=Math.min(100,d.modules[h.module]+h.progress);d.points[h.stat]+=h.points;checkMilestone(r,d,h.module);log(r,`「${d.title}」 ${h.name} 완료.`);break;}
+  case 'test':{const d=findDraft(r,a.id);if(['profile','prompt','start'].some(m=>d.modules[m]<30))throw Error('필수 탭을 30% 이상 채운 뒤 비공개 테스트할 수 있어요.');const cost=byId(D.MODES,d.mode).crackers*40*D.WON_PER_CRACKER*(r.subs.includes('superpass')?0.5:1);spend(s,cost,10);d.tests++;bump(s,'tests');d.points.stability+=5+(r.subs.includes('superpass')?3:0);const {stats}=assess(s,d);const weak=Object.entries(stats).sort((a,b)=>a[1]-b[1])[0][0];d.testNote={week:r.week,stats,weak,text:`비공개 테스트 #${d.tests} (크래커 ${byId(D.MODES,d.mode).crackers*40}개 소모): ${{story:'전개가 늘어진다. 시작 설정과 스탯·엔딩으로 사건을 만들자.',stability:'말투가 흔들리고 이름을 잊는다. 프롬프트 압축과 키워드북이 필요하다.',visual:'상황 이미지가 비어 보인다. 미디어 탭을 채우자.',appeal:'소개·태그가 작품을 설명하지 못한다. 등록 탭을 다듬자.'}[weak]} 안정성 포인트 +${5+(r.subs.includes('superpass')?3:0)}.`};addSkillXp(r,'prompt',6);log(r,`「${d.title}」 비공개 테스트 완료.`);break;}
+  case 'scrap':{const d=findDraft(r,a.id);r.drafts=r.drafts.filter(x=>x.id!==d.id);bump(s,'scrapped');addStress(r,-5);log(r,`「${d.title}」 제작을 접었다. 다음엔 더 잘할 수 있다.`);break;}
   case 'register':return register(s,a,dv);
   case 'visibility':{const w=findWork(r,a.id);if(w.status==='blocked')throw Error('차단된 작품이에요.');if(w.badges.original)throw Error('오리지널 작품은 비공개·링크 공개로 바꿀 수 없어요. (저작권 귀속)');if(w.originalReview)throw Error('오리지널 심사 중에는 공개 상태를 바꿀 수 없어요.');if(!['public','link','private'].includes(a.visibility))throw Error('잘못된 공개 설정이에요.');if(w.visibility===a.visibility)throw Error('이미 그 상태예요.');w.visibility=a.visibility;if(a.visibility==='public'){if(!w.everPublic){w.everPublic=true;w.releasedWeek=r.week;r.totals.publicWorks++;r.stats.works++;if(!r.stats.genres.includes(w.genre))r.stats.genres.push(w.genre);trophy(s,'first');if(r.stats.works>=10)trophy(s,'ten');if(r.stats.genres.length>=7)trophy(s,'allgenre');}w.lastUpdated=r.week;w.status='active';log(r,`「${w.title}」 전체 공개! 신작 탭에 2주간 노출된다.`);}else log(r,`「${w.title}」 ${a.visibility==='link'?'링크 공개':'비공개'}로 전환.`);break;}
-  case 'promote':{const w=findWork(r,a.id);const p=byId(D.PROMOS,a.kind);if(!p)throw Error('알 수 없는 홍보예요.');if(w.visibility!=='public'||w.status!=='active')throw Error('전체 공개 중인 작품만 홍보할 수 있어요.');if(p.rep&&r.rep<p.rep)throw Error(`인지도 ${p.rep} 이상이 필요해요.`);const used=r.weekActions.promos[w.id]??=[];if(used.includes(p.id))throw Error('이번 주에 이미 실행한 홍보예요.');spend(s,p.money,p.energy);used.push(p.id);if(p.followers)addFollowers(r,p.followers);addStress(r,p.stress);addSkillXp(r,'community',8);if(p.id==='gallery')bump(s,'gallery');log(r,`「${w.title}」 ${p.name} 실행.`);break;}
+  case 'promote':{const w=findWork(r,a.id);const p=byId(D.PROMOS,a.kind);if(!p)throw Error('알 수 없는 홍보예요.');if(w.visibility!=='public'||w.status!=='active')throw Error('전체 공개 중인 작품만 홍보할 수 있어요.');if(p.rep&&r.rep<p.rep)throw Error(`인지도 ${p.rep} 이상이 필요해요.`);const used=r.weekActions.promos[w.id]??=[];if(used.includes(p.id))throw Error('이번 주에 이미 실행한 홍보예요.');spend(s,p.money,p.energy);used.push(p.id);bump(s,'promos');if(p.followers)addFollowers(r,p.followers);addStress(r,p.stress*(r.flags.path_social?0.5:1));addSkillXp(r,'community',8);if(p.id==='gallery')bump(s,'gallery');log(r,`「${w.title}」 ${p.name} 실행.`);break;}
   case 'update':{const w=findWork(r,a.id);const m=Object.hasOwn(D.MODULES,a.module)?D.MODULES[a.module]:null;if(!m)throw Error('수정할 탭을 선택하세요.');if(w.status!=='active'||w.visibility!=='public')throw Error('전체 공개 중인 작품만 업데이트할 수 있어요.');if(r.weekActions.updates[w.id])throw Error('이번 주에 이미 업데이트했어요.');if(!applicableModules(w).includes(a.module))throw Error('이 작품 유형에 없는 탭이에요.');if(w.stats[m.stat]>=100)throw Error('이미 완벽한 항목이에요.');spend(s,50000,20);w.stats[m.stat]=clamp(w.stats[m.stat]+6+R(r.skills[m.skill]*0.7));w.quality=quality(w.stats);w.lastUpdated=r.week;w.updates++;r.weekActions.updates[w.id]=true;addStress(r,5);addSkillXp(r,m.skill,8);r.xp+=6;bump(s,'updates');log(r,`「${w.title}」 ${m.name} 업데이트. ${D.STATS[m.stat]} ${w.stats[m.stat]}. 팔로워에게 알림이 간다.`);break;}
   case 'comments':{const w=findWork(r,a.id);w.commentsClosed=!w.commentsClosed;log(r,`「${w.title}」 댓글 기능 ${w.commentsClosed?'닫음':'열림'}.`);break;}
   case 'only':{const w=findWork(r,a.id);if(r.creatorStage<2)throw Error('크랙 온리는 크리에이터만 등록할 수 있어요.');if(w.origin!=='original')throw Error('2차 창작은 온리 등록이 불가능해요.');if(w.badges.original)throw Error('오리지널 작품은 이미 전용 정산이 적용돼요.');if(w.badges.only&&w.badges.only>=r.week)throw Error('이미 온리 기간이에요.');if(w.visibility!=='public')throw Error('전체 공개 작품만 온리 등록할 수 있어요.');w.badges.only=r.week+24;r.stats.only++;bump(s,'only');trophy(s,'only');insight(s,'only_rate');log(r,`「${w.title}」 크랙 온리 등록 (24주). 정산 비율 1.5% → 2.5%, 해외 서비스 소개 대상.`);break;}
@@ -164,15 +171,15 @@ export function act(s,a){
   case 'buy':{const it=byId(D.ITEMS,a.id);if(!it)throw Error('알 수 없는 장비예요.');if(r.items.includes(it.id))throw Error('이미 보유한 장비예요.');spend(s,it.price,0);r.items.push(it.id);log(r,`${it.name} 구매. ${it.desc}`);break;}
   case 'subscribe':{const sub=byId(D.SUBSCRIPTIONS,a.id);if(!sub)throw Error('알 수 없는 구독이에요.');if(r.subs.includes(sub.id)){r.subs=r.subs.filter(x=>x!==sub.id);log(r,`${sub.name} 구독 해지.`);}else{spend(s,sub.monthly,0);r.subs.push(sub.id);log(r,`${sub.name} 구독 시작. 매월 ${sub.monthly.toLocaleString('ko-KR')}원.`);}break;}
   case 'move':{const st=D.STUDIOS.find(x=>x.id===Number(a.studio));if(!st)throw Error('알 수 없는 작업실이에요.');if(r.studio===st.id)throw Error('이미 여기 살고 있어요.');if(!r.ownedStudios.includes(st.id)){spend(s,st.deposit,0);r.ownedStudios.push(st.id);}r.studio=st.id;if(st.id===4)trophy(s,'studio4');log(r,`${st.name}(으)로 이사했다. 주당 임대료 ${st.rent.toLocaleString('ko-KR')}원.`);break;}
-  case 'job':{const j=byId(D.JOBS,a.id);if(!j)throw Error('알 수 없는 일이에요.');if(r.rep<j.rep)throw Error(`인지도 ${j.rep} 이상이 필요해요.`);if(r.weekActions.jobs[j.id])throw Error('이번 주에 이미 한 일이에요.');spend(s,0,j.energy);r.weekActions.jobs[j.id]=true;r.money+=j.money;addStress(r,j.stress);if(j.followers)addFollowers(r,j.followers);if(j.xp)addSkillXp(r,j.xp,20);log(r,`${j.name} 완료. +${j.money.toLocaleString('ko-KR')}원`);break;}
-  case 'life':{const l=byId(D.LIFE,a.id);if(!l)throw Error('알 수 없는 활동이에요.');if(l.id==='nap'){if(r.weekActions.nap)throw Error('이번 주는 이미 푹 쉬었어요.');r.weekActions.nap=true;r.energy=Math.max(0,r.energy-20);}else spend(s,0,l.energy);addStress(r,l.stress);r.inspiration=clamp(r.inspiration+l.inspiration);if(l.energyMax&&rng(r)<0.25){r.energyBonus=(r.energyBonus||0)+1;log(r,'꾸준한 운동으로 최대 체력 +1!');}log(r,`${l.name}. ${l.desc}`);break;}
+  case 'job':{const j=byId(D.JOBS,a.id);if(!j)throw Error('알 수 없는 일이에요.');if(r.rep<j.rep)throw Error(`인지도 ${j.rep} 이상이 필요해요.`);if(r.weekActions.jobs[j.id])throw Error('이번 주에 이미 한 일이에요.');spend(s,0,j.energy);r.weekActions.jobs[j.id]=true;r.money+=j.money;bump(s,'jobs');addStress(r,j.stress);if(j.followers)addFollowers(r,j.followers);if(j.xp)addSkillXp(r,j.xp,20);log(r,`${j.name} 완료. +${j.money.toLocaleString('ko-KR')}원`);break;}
+  case 'life':{const l=byId(D.LIFE,a.id);if(!l)throw Error('알 수 없는 활동이에요.');if(l.id==='nap'){if(r.weekActions.nap)throw Error('이번 주는 이미 푹 쉬었어요.');r.weekActions.nap=true;r.energy=Math.max(0,r.energy-20);}else spend(s,0,l.energy);if(l.money)r.money+=l.money;if(l.followers)addFollowers(r,l.followers);if(l.rep)r.rep+=l.rep;if(l.xp)addSkillXp(r,l.xp,4);if(l.id==='walk')bump(s,'walks');addStress(r,l.stress);r.inspiration=clamp(r.inspiration+l.inspiration+(l.id==='read'?dv.readBonus:0));if(l.energyMax&&rng(r)<0.25){r.energyBonus=(r.energyBonus||0)+1;log(r,'꾸준한 운동으로 최대 체력 +1!');}log(r,`${l.name}. ${l.desc}`);break;}
   case 'endweek':return endWeek(s,dv);
   case 'retire':{if(r.week<D.WEEKS_PER_YEAR)throw Error('1년차를 마친 뒤부터 조기 은퇴할 수 있어요.');finishRun(s,true);break;}
   default:throw Error('알 수 없는 행동이에요.');
  }
  return s;
 }
-const monthKey=w=>monthOf(w)+yearOf(w)*100;
+const monthKey=w=>monthOf(w)+yearOf(w)*100;const c0=(r,k)=>(r.stats.counters[k]||0)>0;
 function bump(s,key,n=1){const c=s.run.stats.counters;c[key]=(c[key]||0)+n;}
 
 function createDraft(s,a,dv){
@@ -197,12 +204,12 @@ function work(s,a,dv){
  const imgCost=a.module==='media'||a.module==='profile'?(r.subs.includes('imagegen')&&img.id==='gen'?0:img.cost*(a.module==='profile'?1:2)):0;
  spend(s,imgCost,15);
  const skill=r.skills[m.skill];
- const gain=Math.max(8,R((30+skill*2+dv.progressBonus)*tpl.progress/m.cost*dv.progressMul*(r.stress>=70?0.7:1)*noise(r,0.15)));
+ const gain=Math.max(8,R((30+skill*2+dv.progressBonus+(a.module==='media'?dv.mediaProgress:0))*tpl.progress/m.cost*dv.progressMul*(r.stress>=70?0.7:1)*noise(r,0.15)));
  let pts=(5+skill*1.6)*tpl.points*dv.pointMul*dv.statMul[m.stat]*noise(r,0.2);
- const crit=rng(r)<dv.crit;if(crit){pts*=2.2;d.crits++;}
+ const crit=rng(r)<dv.crit;if(crit){pts*=2.2;d.crits++;bump(s,'crits');}if(a.module==='media'&&r.flags.visualBoost===r.week)pts*=2;
  pts=R(pts*10)/10;d.points[m.stat]+=pts;const others=Object.keys(D.STATS).filter(k=>k!==m.stat);d.points[pick(r,others)]+=R(pts*0.25*10)/10;
  d.modules[a.module]=Math.min(100,d.modules[a.module]+gain);
- addStress(r,4+(r.traits.includes('owl')?1:0));r.inspiration=clamp(r.inspiration-2);r.xp+=4;addSkillXp(r,m.skill,6);
+ addStress(r,Math.max(1,4+(r.traits.includes('owl')?1:0)+dv.workStress));r.inspiration=clamp(r.inspiration-2);r.xp+=4;addSkillXp(r,m.skill,6);
  log(r,`${crit?'✦ 영감 폭발! ':''}「${d.title}」 ${m.name} +${gain}% (${d.modules[a.module]}%) · ${D.STATS[m.stat]} +${pts}`);
  checkMilestone(r,d,a.module);
  if(a.module==='keyword'&&d.modules.keyword>=100){bump(s,'keyword');if((r.stats.counters.keyword||0)>=2)insight(s,'keyword_stab');}
@@ -228,9 +235,10 @@ function register(s,a,dv){
 
 function choose(s,a){
  const r=s.run;const q=r.queue[0];if(!q)throw Error('고를 선택지가 없어요.');const i=Number(a.option);if(!Number.isInteger(i)||i<0||i>=q.options.length)throw Error('잘못된 선택이에요.');
+ if(q.kind==='event'){const o=q.options[i];if(o.needSkill&&r.skills[o.needSkill[0]]<o.needSkill[1])throw Error(`${D.SKILLS[o.needSkill[0]].name} Lv.${o.needSkill[1]} 이상이 필요한 선택이에요.`);}
  r.queue.shift();
  if(q.kind==='milestone'){const d=r.drafts.find(d=>d.id===q.draftId);const o=MILESTONES[q.module][i];if(d){for(const [k,v] of Object.entries(o.effects)){if(k==='money')r.money+=v;else d.points[k]+=v;}log(r,`「${d.title}」 ${o.label}: ${o.log}`);}}
- else if(q.kind==='event'){const ev=byId(D.EVENTS,q.eventId);if(ev){const o=ev.options[i];applyEffects(s,o.effects,q);log(r,`${q.title} → ${o.label}. ${o.log}`);}}
+ else if(q.kind==='event'){const ev=byId(D.EVENTS,q.eventId);if(ev){const o=ev.options[i];bump(s,'events');if(ev.chain&&!(o.effects.schedule))bump(s,'arcs');applyEffects(s,o.effects,q);log(r,`${q.title} → ${o.label}. ${o.log}`);}}
  return s;
 }
 function applyEffects(s,e,q){
@@ -242,7 +250,7 @@ function applyEffects(s,e,q){
  if(e.contestMonth)r.contestMonth=monthKey(r.week);
  if(e.draftPoints&&r.drafts[0])for(const [k,v] of Object.entries(e.draftPoints))r.drafts[0].points[k]+=v;
  if(e.workPoints)for(const w of r.works)for(const [k,v] of Object.entries(e.workPoints)){w.stats[k]=clamp(w.stats[k]+v);w.quality=quality(w.stats);}
- if(e.trophy)trophy(s,e.trophy);if(e.flag)r.flags[e.flag]=true;if(e.gift){r.pendingCash+=R(e.gift*D.WON_PER_CRACKER*D.GIFT_RATE.creator);}
+ if(e.trophy)trophy(s,e.trophy);if(e.flag){r.flags[e.flag]=true;if(e.flag==='studio'){bump(s,'studioEver');insight(s,'studio_cost');}if(e.flag==='superfan')insight(s,'superfan');}if(e.gift){r.pendingCash+=R(e.gift*D.WON_PER_CRACKER*D.GIFT_RATE.creator);}
  if(e.relation&&q?.rivalId){const rv=r.rivals.find(x=>x.id===q.rivalId);if(rv)rv.relation=clamp(rv.relation+e.relation,-100,100);}
  if(e.closeComments&&newest)newest.commentsClosed=true;
  if(e.convertAdult){const w=r.works.find(w=>w.visibility==='public'&&w.audience==='all');if(w){w.audience='adult';log(r,`「${w.title}」 성인 작품으로 전환됐다.`);}}
@@ -255,14 +263,26 @@ function applyEffects(s,e,q){
  if(e.cashPct)r.pendingCash=Math.max(0,R(r.pendingCash*(1+e.cashPct)));if(e.delaySettle)r.flags.delaySettle=true;
  if(e.reviewDelay)for(const w of r.works)if(w.originalReview)w.originalReview.resultWeek+=e.reviewDelay;
  if(e.adultMod)(r.mods.adult??=[]).push({mul:e.adultMod.mul,weeks:e.adultMod.weeks});
+ if(e.flag2)r.flags[e.flag2]=true;if(e.unflag)delete r.flags[e.unflag];
+ if(e.salaryDelta)r.perm.salary+=e.salaryDelta;if(e.energyMaxDelta)r.perm.energy+=e.energyMaxDelta;if(e.recoverPerm)r.perm.recover+=e.recoverPerm;
+ if(e.payPerm)r.perm.pay=e.payPerm==='reset'?1:r.perm.pay*e.payPerm;if(e.exposurePerm)r.perm.exposure=e.exposurePerm==='reset'?1:r.perm.exposure*e.exposurePerm;
+ if(e.costPerm)r.perm.cost*=e.costPerm;if(e.rentPerm)r.perm.rent*=e.rentPerm;if(e.progressPerm)r.perm.progress*=e.progressPerm;
+ if(e.counter)bump(s,e.counter);if(e.followersPct)r.followers=R(r.followers*(1+e.followersPct));
+ if(e.relationAll)for(const rv of r.rivals)rv.relation=clamp(rv.relation+e.relationAll,-100,100);
+ if(e.draftProgress&&r.drafts[0]){const d=r.drafts[0];for(const k in d.modules)if(d.modules[k]<100)d.modules[k]=Math.max(0,d.modules[k]+e.draftProgress);}
+ if(e.tagBoost)r.flags.tagBoost=r.week+e.tagBoost;if(e.visualBoost)r.flags.visualBoost=r.week;
+ if(e.schedule)for(const [id,weeks] of e.schedule)r.scheduled.push({id,week:r.week+weeks,rivalId:q?.rivalId});
+ if(e.coin){const win=rng(r)<(e.chance??0.5);applyEffects(s,win?e.coin.win:e.coin.lose,q);log(r,win?'결과: 성공!':'결과: 실패...');}
+ if(e.money&&e.money<0&&derive(s).backup&&['hacked','theft','ill','laptop','scam'].includes(q?.eventId)){r.money-=e.money;log(r,'보험·백업 덕분에 손실이 보전됐다.');}
 }
 function sanction(s,n,q){const r=s.run;r.sanctions+=n;const level=r.sanctions;
  if(q?.eventId==='ripped_caught'){const w=r.works.find(w=>w.imageSource==='ripped'&&w.visibility==='public');if(w&&n>=2){w.status='blocked';w.visibility='private';}for(const w of r.works)if(w.imageSource==='ripped')w.imageSource='free';bump(s,'ripped_caught');insight(s,'ripped_risk');}
  if(q?.eventId==='ip_report'){const w=r.works.find(w=>w.origin==='fanwork'&&w.visibility==='public');if(w){w.status='blocked';w.visibility='private';}}
- const msg=level>=4?'누적 제재로 크리에이터 권한이 박탈됐다.':level===3?'7일 이용 제한. 다음 주 노출이 막힌다.':level===2?'3일 이용 제한. 다음 주 체력 -30.':'경고 1회. 다음부터는 이용 제한이다.';
+ const strikes=diffOf(r).strikes||4;if(strikes<4)bump(s,'sanction_hard');
+ const msg=level>=strikes?'누적 제재로 크리에이터 권한이 박탈됐다.':level===3?'7일 이용 제한. 다음 주 노출이 막힌다.':level===2?'3일 이용 제한. 다음 주 체력 -30.':'경고 1회. 다음부터는 이용 제한이다.';
  notice(r,`⚠ 운영 정책 위반 제재 ${level}단계: ${msg}`);log(r,`⚠ 제재 ${level}단계: ${msg}`);
  if(level===3)(r.mods.reach??=[]).push({mul:0.15,weeks:1});if(level===2)r.flags.energyPenalty=30;
- if(level>=4){r.creatorStage=0;finishRun(s,true);}
+ if(level>=strikes){r.creatorStage=0;finishRun(s,true);}
 }
 
 function freshness(r,w){const age=r.week-w.releasedWeek;const eff=Math.min(age,r.week-w.lastUpdated+2);if(eff<=0)return 1.8;if(eff===1)return 1.4;if(eff===2)return 1.1;return Math.max(0.06,1/(1+(eff-2)*0.22));}
@@ -296,11 +316,11 @@ function endWeek(s,dv){
   if(w.visibility!=='public'||w.status!=='active')continue;
   const age=r.week-w.releasedWeek;const fresh=freshness(r,w);
   const newTab=age<=1?1.6:(w.hotUntil>=r.week?1.5:1);const boost=w.boostUntil>=r.week?1.6:1;
-  const promoMul=(r.weekActions.promos[w.id]||[]).reduce((m,id)=>{const p=byId(D.PROMOS,id);let mul=p.mul;if(id==='gallery'&&w.audience==='adult')mul=2.2;return m*(1+(mul-1)*promoMod*(social?1.1:1));},1);
-  const tagHits=w.tags.filter(t=>r.trend.tags.includes(t)).length;const tagMul=1+0.18*tagHits;
+  const promoMul=(r.weekActions.promos[w.id]||[]).reduce((m,id)=>{const p=byId(D.PROMOS,id);let mul=p.mul;if(id==='gallery'&&w.audience==='adult')mul=2.2;return m*(1+(mul-1)*promoMod*(social?1.1:1)*dv.promoMul);},1);
+  const tagHits=w.tags.filter(t=>r.trend.tags.includes(t)).length;const tagMul=1+(r.flags.tagBoost>=r.week?0.36:0.18)*tagHits;
   const aud=byId(D.AUDIENCES,w.audience),origin=byId(D.ORIGINS,w.origin),len=byId(D.LENGTHS,w.length),form=byId(D.FORMS,w.form),mode=byId(D.MODES,w.mode);
   const base=40+6*Math.sqrt(r.rep)+(w.badges.only?8:0)+(w.badges.original?25:0);
-  const exposure=base*fresh*newTab*boost*appetite(r,w)*tagMul*promoMul*reachMod*aud.pool*origin.boost*(1+r.skills.community*0.03)*(mode.id==='hyper'?0.8:mode.id==='light'?1.15:1)*(r.studio===4?1.05:1)*(w.audience==='adult'?modMul(r,'adult'):1)*(w.award?1.1:1)*noise(r,0.15);
+  const exposure=base*fresh*newTab*boost*appetite(r,w)*tagMul*promoMul*reachMod*aud.pool*origin.boost*(1+r.skills.community*0.03)*(mode.id==='hyper'?0.8:mode.id==='light'?1.15:1)*(r.studio===4?1.05:1)*(w.audience==='adult'?modMul(r,'adult'):1)*(w.award?1.1:1)*dv.exposureMul*noise(r,0.15);
   const followerArr=r.followers*(age===0?0.12:age===1?0.05:(r.week-w.lastUpdated<=1&&w.updates?0.04:0.004))*(w.target==='all'?1:1.05);
   const arrivals=R(exposure*(0.06+w.stats.appeal/220)+followerArr);
   w.retention=clamp((w.stats.story*0.5+w.stats.stability*0.5)/100*0.8*len.retention,0.05,0.7);
@@ -309,7 +329,7 @@ function endWeek(s,dv){
   const paying=0.22*aud.pay*payMod*(mode.id==='hyper'?0.9:mode.id==='light'?0.5:1);
   const crackers=R(msgs*paying*mode.crackers*len.cracker);
   const rate=w.badges.original?D.SETTLE_RATE.original:(w.badges.only&&w.badges.only>=r.week)?D.SETTLE_RATE.only:D.SETTLE_RATE.base;
-  const settled=r.creatorStage>=2?R(crackers*D.WON_PER_CRACKER*rate*merchant):0;
+  const settled=r.creatorStage>=2?R(crackers*D.WON_PER_CRACKER*rate*merchant*dv.settleMul):0;
   const giftCr=R(msgs*0.03*(w.quality/80)*noise(r,0.5));const giftWon=R(giftCr*D.WON_PER_CRACKER*(r.creatorStage>=2?D.GIFT_RATE.creator:D.GIFT_RATE.normal)*merchant);
   const likes=R(arrivals*(w.quality/100)*0.08);const likeRatio=arrivals?likes/arrivals:0;
   const newFans=R(arrivals*(w.quality/100)*0.12);
@@ -328,7 +348,7 @@ function endWeek(s,dv){
   if(rng(r)<arch.rate){const nw=makeRivalWork(r,rv,arch,r.week);rv.works.push(nw);if(rng(r)<0.5)feed(r,'rival',pick(r,D.FEED_TEMPLATES.rival_new).replace('{rival}',rv.name).replace('{title}',nw.title));if(nw.badge==='original'){rv.originals++;feed(r,'rival',D.FEED_TEMPLATES.rival_original[0].replace('{rival}',rv.name).replace('{title}',nw.title));}else if(nw.badge==='only'&&rng(r)<0.5)feed(r,'rival',D.FEED_TEMPLATES.rival_only[0].replace('{rival}',rv.name).replace('{title}',nw.title));}
   rv.works=rv.works.filter(x=>r.week-x.releasedWeek<40);
   for(const x of rv.works){const age=r.week-x.releasedWeek;const f=age<=0?1.8:age===1?1.4:age===2?1.1:Math.max(0.12,1/(1+(age-2)*0.22));x.msgs=R(rv.power*(200+25*Math.sqrt(rv.followers))*f*10*noise(r,0.35)*(x.badge?1.3:1)*(r.trend.mood[rv.target]===x.genre?1.3:1));x.plays+=R(x.msgs/20);board.push({title:x.title,author:rv.name,msgs:x.msgs,rival:true,target:x.target,badge:x.badge,adult:x.adult});}
-  rv.followers=R(rv.followers*(1+(arch.grow?0.012:0.004)+rng(r)*0.004));if(rv.followers>3000&&rv.stage<2)rv.stage=2;else if(rv.followers>800&&rv.stage<1)rv.stage=1;
+  rv.followers=R(rv.followers*(1+((arch.grow?0.012:0.004)+rng(r)*0.004)*dv.diff.rivalGrow));if(rv.followers>3000&&rv.stage<2)rv.stage=2;else if(rv.followers>800&&rv.stage<1)rv.stage=1;
  }
  for(const row of rows)board.push({title:row.title,author:r.name,msgs:row.msgs,rival:false,id:row.id,target:row.target});
  board.sort((a,b)=>b.msgs-a.msgs);
@@ -337,12 +357,13 @@ function endWeek(s,dv){
  if(rng(r)<0.6){const rv=pick(r,r.rivals);feed(r,'post',pick(r,D.FEED_TEMPLATES.rival_post).replace('{rival}',rv.name).replace('{tag}',r.trend.tags[0]));}
  // 경제·회복
  r.pendingCash+=cashWeek+giftWeek;r.totals.messages+=msgsTotal;r.totals.players+=playersTotal;r.totals.crackers+=rows.reduce((a,b)=>a+b.crackers,0);
- r.money-=dv.studio.rent;if(dv.bg.salary)r.money+=dv.bg.salary;addFollowers(r,fans);if(r.studio===4)r.rep+=3;
+ r.money-=dv.rent;if(dv.salary)r.money+=dv.salary;addFollowers(r,fans);if(r.studio===4)r.rep+=3;if(dv.awardRep)r.rep+=dv.awardRep*(r.awards.length+r.stats.contestWins);
+ if(r.money<0)r.flags.wasBroke=true;if(r.flags.wasBroke&&r.money>=1000000){bump(s,'comeback');delete r.flags.wasBroke;}
  let burnout=false;if(r.stress>=95){burnout=true;r.stats.burnouts++;r.stress=55;}
  r.stress=clamp(r.stress-dv.recover);r.inspiration=clamp(r.inspiration+dv.inspirationWeekly);r.stats.stressSum+=r.stress;
  for(const key in r.mods)r.mods[key]=r.mods[key].map(m=>({...m,weeks:m.weeks-1})).filter(m=>m.weeks>0);
  if(r.followers>=1000)trophy(s,'fans1k');if(r.followers>=10000)trophy(s,'fans10k');if(r.followers>=300)insight(s,'followers_notify');
- r.report={week:r.week,calendar:calendar(r.week),cash:cashWeek,gift:giftWeek,rent:dv.studio.rent,salary:dv.bg.salary||0,fans,msgs:msgsTotal,players:playersTotal,rows,ranking:r.ranking.all,events:[],pendingCash:r.pendingCash};
+ r.report={week:r.week,calendar:calendar(r.week),cash:cashWeek,gift:giftWeek,rent:dv.rent,salary:dv.salary||0,fans,msgs:msgsTotal,players:playersTotal,rows,ranking:r.ranking.all,events:[],pendingCash:r.pendingCash};
  r.history.followers.push(r.followers);r.history.money.push(r.money);r.history.rep.push(r.rep);r.history.messages.push(msgsTotal);
  // 크리에이터 사다리
  creatorLadder(s);
@@ -354,13 +375,19 @@ function endWeek(s,dv){
  if(monthEnd)monthClose(s,dv);
  if(yearEnd){if(r.sanctions===0)trophy(s,'clean');yearAwards(s);}
  r.week++;
+ if(r.week===Math.floor(r.careerWeeks/2)+1)r.scheduled.push({id:'midcareer',week:r.week});
+ if(r.week>1&&(r.week-1)%D.WEEKS_PER_YEAR===0&&r.week<=r.careerWeeks)r.scheduled.push({id:'new_year',week:r.week});
+ const due=r.scheduled.filter(x=>x.week<=r.week);r.scheduled=r.scheduled.filter(x=>x.week>r.week);
+ for(const x of due){const ev=byId(D.EVENTS,x.id);if(!ev)continue;const rv=r.rivals.find(v=>v.id===x.rivalId)||pick(r,r.rivals);r.queue.push({kind:'event',eventId:ev.id,rivalId:rv.id,title:ev.title.replace('{rival}',rv.name),text:ev.text.replace('{rival}',rv.name),options:ev.options.map(o=>({label:o.label,needSkill:o.needSkill}))});}
  if(weekOfMonth(r.week)===1&&!r.contest&&(monthOf(r.week)%2===1||(monthOf(r.week)===11&&yearOf(r.week)>=2)))openContest(s);
  if(weekOfMonth(r.week)===1&&r.week>1){let fee=0;for(const id of r.subs)fee+=byId(D.SUBSCRIPTIONS,id).monthly;if(fee){r.money-=R(fee*dv.costMul);r.report.events.push(`구독료 ${R(fee*dv.costMul).toLocaleString('ko-KR')}원 결제`);}r.trend=r.nextTrend;r.nextTrend=rollTrend(r);}
  if(burnout){r.queue.push({kind:'event',eventId:'__burnout',title:'번아웃',text:'몸과 마음이 멈췄다. 이번 주는 절반의 체력으로 시작한다. 쉬어가자.',options:[{label:'...쉬자'}]});r.report.events.push('번아웃! 체력 절반으로 시작');}
- if(rng(r)<0.5){const ev=rollEvent(s);if(ev){const rv=ev.need==='relationGood'?(r.rivals.find(x=>x.relation>=30)||pick(r,r.rivals)):pick(r,r.rivals);const tier=r.rep>=1200?'상위권':r.rep>=300?'중위권':'"기타"';r.queue.push({kind:'event',eventId:ev.id,rivalId:rv.id,title:ev.title.replace('{rival}',rv.name),text:ev.text.replace('{rival}',rv.name).replace('{tier}',tier),options:ev.options.map(o=>({label:o.label}))});if(ev.once)(r.flags.seen??=[]).push(ev.id);}}
+ if(rng(r)<(dv.diff.bad>1?0.6:0.5)){const ev=rollEvent(s);if(ev){const rv=ev.need==='relationGood'?(r.rivals.find(x=>x.relation>=30)||pick(r,r.rivals)):pick(r,r.rivals);const tier=r.rep>=1200?'상위권':r.rep>=300?'중위권':'"기타"';r.queue.push({kind:'event',eventId:ev.id,rivalId:rv.id,title:ev.title.replace('{rival}',rv.name),text:ev.text.replace('{rival}',rv.name).replace('{tier}',tier),options:ev.options.map(o=>({label:o.label,needSkill:o.needSkill}))});if(ev.once)(r.flags.seen??=[]).push(ev.id);}}
  r.energy=burnout?R(dv.energyMax/2):dv.energyMax;if(r.flags.energyPenalty){r.energy=Math.max(10,r.energy-r.flags.energyPenalty);delete r.flags.energyPenalty;}
  r.weekActions={promos:{},jobs:{},nap:false,updates:{}};
- if(r.week-1>=8)insight(s,'creator_gate');if((r.stats.counters.gallery||0)>=3)insight(s,'gallery_adult');if((r.stats.counters.tagmeta||0)>=1)insight(s,'tags_meta');if((r.stats.counters.updates||0)>=3)insight(s,'fresh_update');if((r.stats.counters.adult||0)>=1&&r.works.some(w=>w.audience==='adult'&&w.plays>0))insight(s,'adult_pay');if((r.stats.counters.length3||0)>=1)insight(s,'length_tradeoff');if((r.stats.counters.target_female||0)>=2)insight(s,'female_story');if((r.stats.counters.target_male||0)>=2)insight(s,'male_sim');
+ if(r.week-1>=8)insight(s,'creator_gate');if(dv.backup)insight(s,'backup');if(c0(r,'summer'))insight(s,'season_summer');if(c0(r,'path'))insight(s,'path');if(c0(r,'sanction_hard'))insight(s,'strikes');if(r.rivals.some(x=>Math.abs(x.relation)>=30))insight(s,'rival_relation');if((r.stats.counters.updates||0)>=10)insight(s,'longtail');if(['hard','nightmare'].includes(r.difficulty))insight(s,'difficulty');if((r.stats.counters.gallery||0)>=3)insight(s,'gallery_adult');if((r.stats.counters.tagmeta||0)>=1)insight(s,'tags_meta');if((r.stats.counters.updates||0)>=3)insight(s,'fresh_update');if((r.stats.counters.adult||0)>=1&&r.works.some(w=>w.audience==='adult'&&w.plays>0))insight(s,'adult_pay');if((r.stats.counters.length3||0)>=1)insight(s,'length_tradeoff');if((r.stats.counters.target_female||0)>=2)insight(s,'female_story');if((r.stats.counters.target_male||0)>=2)insight(s,'male_sim');
+ checkTrophies(s);
+ if(dv.diff.bankrupt!==null&&r.money<dv.diff.bankrupt&&!r.ended){bump(s,'bankrupt');notice(r,'💸 자금이 한계를 넘었다. 파산.');finishRun(s,true);return s;}
  log(r,`주간 집계 · 발화 ${msgsTotal.toLocaleString('ko-KR')} · 정산 예정 +${(cashWeek+giftWeek).toLocaleString('ko-KR')}원 · 팔로워 +${fans}${rows.length?` · 최고 ${Math.min(...rows.map(x=>x.rank))}위`:''}`);
  if(!r.ended&&r.week>r.careerWeeks)finishRun(s,false);
  return s;
@@ -368,12 +395,13 @@ function endWeek(s,dv){
 function creatorLadder(s){
  const r=s.run,req=creatorReq(s);
  if(r.creatorStage===0&&r.totals.publicWorks>=req.works&&r.totals.players>=req.players&&r.followers>=req.followers){r.creatorStage=1;trophy(s,'mission');notice(r,`🎯 크리에이터 미션 참여 조건 달성! 이제 누적 발화 ${req.messages.toLocaleString('ko-KR')}을 채우면 정식 크리에이터가 된다.`);log(r,'크리에이터 미션 시작!');}
- if(r.creatorStage===1&&r.totals.messages>=req.messages){r.creatorStage=2;trophy(s,'creator');notice(r,'🏅 정식 크리에이터 등록! 프로필에 크리에이터 배지가 붙고, 이제부터 크래커 사용량의 1.5%가 매월 캐시로 정산된다. 선물 정산 90%. 크랙 온리·오리지널 신청이 열린다.');log(r,'정식 크리에이터가 되었다!');}
+ if(r.creatorStage===1&&r.totals.messages>=req.messages){r.creatorStage=2;r.stats.creatorWeek=r.week;r.scheduled.push({id:'creator_path',week:r.week+1});trophy(s,'creator');notice(r,'🏅 정식 크리에이터 등록! 프로필에 크리에이터 배지가 붙고, 이제부터 크래커 사용량의 1.5%가 매월 캐시로 정산된다. 선물 정산 90%. 크랙 온리·오리지널 신청이 열린다.');log(r,'정식 크리에이터가 되었다!');}
 }
 function resolveReview(s,w){
  const r=s.run;const rv=w.originalReview;w.originalReview=null;
- let chance=rv.sequel?0.8:clamp((w.quality-55)/40+w.volume*0.05+(rv.contest?0.15:0),0.05,0.9);
- if(rng(r)<chance){
+ let chance=rv.sequel?0.8:clamp(((w.quality-55)/40+w.volume*0.05+(rv.contest?0.15:0))*diffOf(r).review,0.05,0.9);
+ let pass=rng(r)<chance;if(!pass&&has(s,'second_chance')&&!rv.retry){pass=rng(r)<chance;if(pass)log(r,'재심 청구가 받아들여졌다!');}
+ if(pass){
   w.badges.original=true;w.visibility='public';if(!w.everPublic){w.everPublic=true;r.totals.publicWorks++;r.stats.works++;if(!r.stats.genres.includes(w.genre))r.stats.genres.push(w.genre);}w.releasedWeek=r.week;w.lastUpdated=r.week;w.boostUntil=r.week+4;w.status='active';
   const buyout=rv.sequel?R(300000+w.quality*w.quality*150):R(500000+w.quality*w.quality*400+(rv.contest?3000000:0));r.money+=buyout;r.rep+=rv.sequel?60:150;r.stats.originals++;bump(s,'original');
   trophy(s,rv.sequel?'sequel':'original');if(r.stats.burnouts)trophy(s,'survivor');
@@ -386,10 +414,11 @@ function resolveReview(s,w){
 }
 function rollEvent(s){
  const r=s.run;const lucky=r.traits.includes('lucky');const pub=r.works.filter(w=>w.visibility==='public'&&w.status==='active');
- const ok=e=>{if(e.once&&(r.flags.seen||[]).includes(e.id))return false;switch(e.need){case undefined:return true;case 'published':return pub.length>0;case 'published_all':return pub.some(w=>w.audience==='all');case 'stress60':return r.stress>=60;case 'stress50':return r.stress>=50;case 'rep150':return r.rep>=150;case 'rep300':return r.rep>=300;case 'rep800':return r.rep>=800&&!r.flags.publisher;case 'fans500':return r.followers>=500;case 'fans1000':return r.followers>=1000;case 'fans2000':return r.followers>=2000;case 'rich':return r.settledTotal>=5000000;case 'cat':return r.items.includes('cat');case 'creator':return r.creatorStage>=2;case 'only':return pub.some(w=>w.badges.only&&w.badges.only>=r.week);case 'fanwork':return pub.some(w=>w.origin==='fanwork');case 'ripped':return pub.some(w=>w.imageSource==='ripped');case 'hit':return pub.some(w=>w.messages>50000);case 'rep500':return r.rep>=500;case 'reviewing':return r.works.some(w=>w.originalReview);case 'relationGood':return r.rivals.some(x=>x.relation>=30);case 'hasAdult':return pub.some(w=>w.audience==='adult');case 'poor':return r.money<300000;default:return false;}};
+ const one=need=>{if(need===undefined)return true;if(need.startsWith('flag:'))return !!r.flags[need.slice(5)];if(need.startsWith('noflag:'))return !r.flags[need.slice(7)];if(need.startsWith('month:'))return monthOf(r.week)===Number(need.slice(6));if(need.startsWith('bg:'))return r.background===need.slice(3);if(need==='diff:hard')return ['hard','nightmare'].includes(r.difficulty);switch(need){case undefined:return true;case 'published':return pub.length>0;case 'published_all':return pub.some(w=>w.audience==='all');case 'stress60':return r.stress>=60;case 'stress50':return r.stress>=50;case 'rep150':return r.rep>=150;case 'rep300':return r.rep>=300;case 'rep800':return r.rep>=800&&!r.flags.publisher;case 'fans500':return r.followers>=500;case 'fans1000':return r.followers>=1000;case 'fans2000':return r.followers>=2000;case 'rich':return r.settledTotal>=5000000;case 'cat':return r.items.includes('cat');case 'creator':return r.creatorStage>=2;case 'only':return pub.some(w=>w.badges.only&&w.badges.only>=r.week);case 'fanwork':return pub.some(w=>w.origin==='fanwork');case 'ripped':return pub.some(w=>w.imageSource==='ripped');case 'hit':return pub.some(w=>w.messages>50000);case 'rep500':return r.rep>=500;case 'reviewing':return r.works.some(w=>w.originalReview);case 'relationGood':return r.rivals.some(x=>x.relation>=30);case 'hasAdult':return pub.some(w=>w.audience==='adult');case 'poor':return r.money<300000;case 'creator1':return r.creatorStage>=1;case 'rep100':return r.rep>=100;case 'rep200':return r.rep>=200;case 'originals1':return r.stats.originals>=1;case 'burnout1':return r.stats.burnouts>=1;case 'fans800':return r.followers>=800;case 'drafting':return r.drafts.length>0;case 'studio1':return r.studio>=1;case 'keyboard':return r.items.includes('keyboard');case 'money_low':return r.money<500000;default:return false;}};
+ const ok=e=>{if(e.chain)return false;if(e.once&&(r.flags.seen||[]).includes(e.id))return false;const needs=Array.isArray(e.need)?e.need:[e.need];return needs.every(one);};
  const pool=D.EVENTS.filter(ok);if(!pool.length)return null;
  const bad=new Set(['troll','price_up','maintenance','laptop','plagiarism','model_update','cold','censorship_drama','status_changed','tax','gallery_rank','hacked','prompt_leak','refund_wave','settle_delay','comment_raid','algo_drop','fee_up','release_rush','usernote_abuse','review_delay','false_report','theft','fan_leave','ill','rival_diss','ad_policy','bug_week']);
- const weights=pool.map(e=>e.weight*(lucky&&bad.has(e.id)?0.5:1));const total=weights.reduce((a,b)=>a+b,0);let x=rng(r)*total;
+ const badMul=diffOf(r).bad;const isBad=e=>bad.has(e.id)||e.need==='diff:hard'||(Array.isArray(e.need)&&e.need.includes('diff:hard'));const weights=pool.map(e=>e.weight*(lucky&&bad.has(e.id)?0.5:1)*(isBad(e)?badMul:1));const total=weights.reduce((a,b)=>a+b,0);let x=rng(r)*total;
  for(let i=0;i<pool.length;i++){x-=weights[i];if(x<=0)return pool[i];}return pool[pool.length-1];
 }
 function monthClose(s,dv){
@@ -440,7 +469,7 @@ function resolveContest(s){
  const from=c.startWeek;const yr=yearOf(r.week);
  const entries=c.entries.map(id=>r.works.find(w=>w.id===id)).filter(Boolean).map(w=>{const msgs=w.weekly.filter(x=>x.week>=from).reduce((a,b)=>a+b.msgs,0);const fit=c.theme.kind==='tag'?w.tags.filter(t=>r.trend.tags.includes(t)).length*3:c.theme.kind==='story'||c.theme.kind==='buyout'?w.volume*3:5;return {id:w.id,title:w.title,author:r.name,score:R(w.quality*0.7+Math.log10(msgs+1)*9+fit+(rng(r)*16-8)),rival:false};});
  const n=c.id==='rookie'?6:10;const rivalPool=r.rivals.filter(rv=>c.id!=='rookie'||rv.followers<1500);
- const used=new Set();const rivalEntries=Array.from({length:n},()=>{let rv=pick(r,rivalPool);for(let k=0;k<5&&used.has(rv.id);k++)rv=pick(r,rivalPool);used.add(rv.id);const x=rv.works[rv.works.length-1];const base=c.id==='rookie'?45:55;return {title:x?x.title:rivalTitle(r,byId(D.RIVAL_ARCHETYPES,rv.arch)),author:rv.name,score:R(base+rv.power*14+Math.log10(rv.followers+1)*4+yr*2+(rng(r)*20-10)),rival:true};});
+ const used=new Set();const rivalEntries=Array.from({length:n},()=>{let rv=pick(r,rivalPool);for(let k=0;k<5&&used.has(rv.id);k++)rv=pick(r,rivalPool);used.add(rv.id);const x=rv.works[rv.works.length-1];const base=c.id==='rookie'?45:55;return {title:x?x.title:rivalTitle(r,byId(D.RIVAL_ARCHETYPES,rv.arch)),author:rv.name,score:R((base+rv.power*14+Math.log10(rv.followers+1)*4+yr*2+(rng(r)*20-10))*(0.9+0.1*diffOf(r).contest)),rival:true};});
  const all=[...entries,...rivalEntries].sort((a,b)=>b.score-a.score);
  const result={name:c.name,week:r.week,board:all.slice(0,10),mine:[]};
  all.forEach((e,i)=>{if(e.rival)return;const rank=i+1;const bucket=rank===1?0:rank<=3?1:rank<=6?2:rank<=10?3:-1;const w=r.works.find(w=>w.id===e.id);
@@ -448,7 +477,8 @@ function resolveContest(s){
    if(c.id==='buyout'&&bucket<=1&&!w.badges.original){w.badges.original=true;r.stats.originals++;w.boostUntil=r.week+4;trophy(s,'original');}
    result.mine.push({title:w.title,rank,award:D.CONTEST_RANKS[bucket],prize});feed(r,'me',`🏆 「${w.title}」 ${c.name} ${D.CONTEST_RANKS[bucket]}!`);log(r,`🏆 「${w.title}」 ${c.name} ${D.CONTEST_RANKS[bucket]} · 상금 ${prize.toLocaleString('ko-KR')}원`);}
   else{result.mine.push({title:w.title,rank,award:null,prize:0});log(r,`「${w.title}」 ${c.name} ${rank}위. 입상 실패.`);}});
- if(result.mine.some(m=>m.award)){trophy(s,'contest');if(result.mine.some(m=>m.rank===1))trophy(s,'grandprix');}
+ if(result.mine.some(m=>m.award)){trophy(s,'contest');if(result.mine.some(m=>m.rank===1))trophy(s,'grandprix');if(c.id==='buyout')bump(s,'buyoutWin');}
+ bump(s,'contests');insight(s,'contest_timing');
  r.contestHistory.unshift(result);r.contestHistory=r.contestHistory.slice(0,12);
  if(c.entries.length)r.queue.push({kind:'contest',title:`${c.name} 결과 발표`,text:result.mine.map(m=>`「${m.title}」 ${m.rank}위${m.award?' · '+m.award+' · 상금 '+m.prize.toLocaleString('ko-KR')+'원':''}`).join(' / '),board:result.board,options:[{label:'확인'}]});
  else feed(r,'contest',`${c.name} 결과: 대상 「${all[0].title}」 (${all[0].author})`);
@@ -470,19 +500,36 @@ function yearAwards(s){
  if(got.length)trophy(s,'award');
  r.queue.push({kind:'awards',title:`${year}년차 크랙 크리에이터 어워드`,text:got.length?`${got.length}개 부문 수상! 인지도 +${150*got.length}, 상금 ${(1000000*got.length).toLocaleString('ko-KR')}원`:'올해는 수상하지 못했다. 후보 명단엔 올랐지만 라이벌들이 강했다. 내년을 노리자.',awards:got.map(g=>({name:byId(D.YEAR_AWARDS,g.id).name,work:g.work})),options:[{label:'확인'}]});
 }
+export function trophyCtx(s){
+ const r=s.run;const m=s.meta;const c=r?.stats.counters||{};const works=r?.works||[];const pub=works.filter(w=>w.everPublic);
+ const mx=f=>works.length?Math.max(...works.map(f)):0;
+ return {works:works.length,stories:pub.filter(w=>w.kind==='story').length,characters:pub.filter(w=>w.kind==='character').length,messages:r?.totals.messages||0,players:r?.totals.players||0,
+  maxWorkMsgs:mx(w=>w.messages),maxLikes:mx(w=>w.likes),maxComments:mx(w=>w.commentCount),maxQuality:mx(w=>w.quality),maxVolume:mx(w=>w.volume||0),
+  forms:new Set(pub.map(w=>w.form)).size,targets:new Set(pub.filter(w=>w.target!=='all').map(w=>w.target)).size,genres:r?.stats.genres.length||0,adultWorks:pub.filter(w=>w.audience==='adult').length,fanworks:pub.filter(w=>w.origin==='fanwork').length,hyperWorks:pub.filter(w=>w.mode==='hyper').length,longWorks:pub.filter(w=>w.length>=5).length,
+  tests:c.tests||0,helpers:c.helpers||0,updates:c.updates||0,crits:c.crits||0,scrapped:c.scrapped||0,sequels:works.filter(w=>w.sequelOf&&w.badges.original).length,
+  followers:r?.followers||0,rep:r?.rep||0,money:r?.money||0,settled:r?.settledTotal||0,gifts:works.reduce((a,w)=>a+w.gifts,0),comeback:c.comeback||0,
+  bestRank:r?.stats.bestRank||999,weekly1:r?.stats.weekly1||0,monthly1:r?.stats.monthly1||0,hot:r?.stats.hot||0,contestWins:r?.stats.contestWins||0,awards:r?.awards.length||0,only:r?.stats.only||0,originals:r?.stats.originals||0,buyoutWin:c.buyoutWin||0,
+  skillMax:r?Math.max(...Object.values(r.skills)):0,skillMin:r?Math.min(...Object.values(r.skills)):0,items:r?.items.length||0,subs:r?.subs.length||0,studio:r?.studio||0,stress:r?.stress??100,maxStress:r?.stats.maxStress||0,burnouts:r?.stats.burnouts||0,
+  jobs:c.jobs||0,walks:c.walks||0,promos:c.promos||0,gallery:c.gallery||0,events:c.events||0,arcs:c.arcs||0,friends:r?.rivals.filter(x=>x.relation>=30).length||0,enemies:r?.rivals.filter(x=>x.relation<=-30).length||0,sanctions:r?.sanctions||0,
+  creatorWeek:r?.stats.creatorWeek||999,hardClear:c.hardClear||0,nightmareClear:c.nightmareClear||0,legacyTotal:m.legacyEarned||0,runs:m.runs.length,insightsAll:m.insights.length>=D.INSIGHTS.length?1:0,endings:m.endings.length};
+}
+function checkTrophies(s){const ctx=trophyCtx(s);for(const t of D.TROPHIES){if(!t.cond||s.meta.trophies.includes(t.id))continue;if(evalCond(t.cond,ctx))trophy(s,t.id);}}
 export function scoreOf(r){const avgQ=r.works.length?R(r.works.reduce((a,w)=>a+w.quality,0)/r.works.length):0;return {avgQ,score:R(r.rep+r.followers/5+r.settledTotal/20000+r.stats.originals*500+r.stats.works*40+(r.creatorStage>=2?300:0)+avgQ*5+r.awards.length*200+r.stats.contestWins*100)};}
 function finishRun(s,early){
  const r=s.run;if(r.ended)return;const {avgQ,score}=scoreOf(r);const weeks=Math.max(1,r.week-1);
- const ctx={rep:r.rep,originals:r.stats.originals,followers:r.followers,settled:r.settledTotal,creator:r.creatorStage>=2?1:0,avgQuality:avgQ,works:r.works.length,burnouts:r.stats.burnouts,avgStress:r.stats.stressSum/weeks,sanctions:r.sanctions,money:r.money};
- const ending=D.ENDINGS.find(e=>evalCond(e.cond,ctx))||D.ENDINGS.at(-1);
- const legacy=Math.max(1,Math.floor(score/1200));
+ const c=r.stats.counters;const ctx={rep:r.rep,originals:r.stats.originals,followers:r.followers,settled:r.settledTotal,creator:r.creatorStage>=2?1:0,avgQuality:avgQ,works:r.works.length,burnouts:r.stats.burnouts,avgStress:r.stats.stressSum/weeks,sanctions:r.sanctions,money:r.money,studioContract:r.flags.studio||c.studioEver?1:0,webtoon:c.webtoon||0,publisher:r.flags.publisher?1:0,unionWin:c.unionWin||0,ghostJobs:c.ghostJobs||0,bankrupt:c.bankrupt||0,nightmare:r.difficulty==='nightmare'?1:0};
+ const PRIORITY=['bankrupt','banned','original_star','ip','contract','union','pro','named','gallery_legend','ghost','artisan','ironman','burnout','hobbyist','rookie'];
+ const ending=PRIORITY.map(id=>byId(D.ENDINGS,id)).filter(Boolean).find(e=>evalCond(e.cond,ctx))||D.ENDINGS.at(-1);
+ const diff=diffOf(r);const legacy=Math.max(1,Math.floor(score/1200*diff.legacyMul))+(has(s,'legacy_bank')?1:0);
+ if(r.week>r.careerWeeks){if(['hard','nightmare'].includes(r.difficulty))bump(s,'hardClear');if(r.difficulty==='nightmare')bump(s,'nightmareClear');}
  r.ended={ending:ending.id,name:ending.name,desc:ending.desc,score,legacy,early,ctx};
- s.meta.legacy+=legacy;if(!s.meta.endings.includes(ending.id))s.meta.endings.push(ending.id);if(s.meta.endings.length>=3)trophy(s,'endings3');
- s.meta.best=Math.max(s.meta.best,score);s.meta.runs.push({name:r.name,ending:ending.name,score,weeks,works:r.works.length,originals:r.stats.originals,rep:r.rep,followers:r.followers,settled:r.settledTotal});
+ s.meta.legacy+=legacy;s.meta.legacyEarned=(s.meta.legacyEarned||0)+legacy;if(!s.meta.endings.includes(ending.id))s.meta.endings.push(ending.id);if(s.meta.endings.length>=3)trophy(s,'endings3');
+ s.meta.best=Math.max(s.meta.best,score);s.meta.runs.push({name:r.name,ending:ending.name,score,weeks,works:r.works.length,originals:r.stats.originals,rep:r.rep,followers:r.followers,settled:r.settledTotal,difficulty:r.difficulty});
+ checkTrophies(s);
  const best=r.works.slice().sort((a,b)=>b.messages-a.messages)[0];if(best)s.meta.archive.unshift({title:best.title,author:r.name,genre:best.genre,messages:best.messages,quality:best.quality,original:best.badges.original});s.meta.archive=s.meta.archive.slice(0,20);
  r.queue=[];log(r,`엔딩: ${ending.name} · 점수 ${score} · 유산 +${legacy}`);
 }
-function evalCond(cond,c){return cond.split('&&').every(part=>{if(part==='true')return true;const m=part.match(/^(\w+)(>=|<=)(\d+)$/);if(!m)return false;const v=c[m[1]];return m[2]==='>='?v>=+m[3]:v<=+m[3];});}
+function evalCond(cond,c){return cond.split('&&').every(part=>{if(part==='true')return true;const m=part.match(/^(\w+)(>=|<=)(-?\d+)$/);if(!m)return false;const v=c[m[1]];if(v===undefined)return false;return m[2]==='>='?v>=+m[3]:v<=+m[3];});}
 export const data=D;
 
 // ---------- 세이브 파일(슬롯) ----------
@@ -495,7 +542,7 @@ export function migrateSave(raw){
 }
 export function summarize(profile){
  if(!profile)return null;const r=profile.run;const m=profile.meta;
- return {name:r?.name||null,calendar:r?calendar(Math.min(r.week,r.careerWeeks)):null,ended:!!r?.ended,endingName:r?.ended?.name||null,works:r?.works.length||0,rep:r?.rep||0,stage:r?creatorStageName(r.creatorStage):null,legacy:m.legacy,runs:m.runs.length,trophies:m.trophies.length,theme:profile.theme};
+ return {name:r?.name||null,calendar:r?calendar(Math.min(r.week,r.careerWeeks)):null,ended:!!r?.ended,endingName:r?.ended?.name||null,works:r?.works.length||0,rep:r?.rep||0,stage:r?creatorStageName(r.creatorStage):null,difficulty:r?(D.DIFFICULTIES.find(d=>d.id===r.difficulty)||{}).name:null,legacy:m.legacy,runs:m.runs.length,trophies:m.trophies.length,theme:profile.theme};
 }
 export function actSave(save,a){
  migrateSave(save);if(!a||typeof a!=='object')throw Error('잘못된 요청이에요.');
