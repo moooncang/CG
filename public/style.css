@@ -81,6 +81,8 @@ label{display:block;font-size:12px;margin-bottom:8px;color:var(--muted)}label in
 .up{color:var(--good)}.down{color:var(--bad)}
 .result-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.grade{font-size:38px;font-weight:900;line-height:1;text-align:center;padding:6px 14px;border-radius:12px;border:2px solid var(--border)}.grade small{display:block;font-size:10px;font-weight:400;color:var(--muted)}.g-S{color:#ffd27a;border-color:#ffd27a}.g-A{color:#9fd3ff;border-color:#9fd3ff}.g-B{color:var(--good)}.g-C{color:var(--muted)}.g-D{color:var(--bad)}
 .awards li{font-size:14px}
+.choices.diff{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.diff-easy{color:var(--good)}.diff-normal{color:var(--text)}.diff-hard{color:var(--warn)}.diff-nightmare{color:var(--bad);font-weight:700}
+.trophy i{display:block;font-style:normal;font-size:10px;color:var(--accent2);margin-top:2px}.options button small{display:inline;margin-left:6px;color:var(--muted)}
 
 /* Midnight Studio — visual system, no simulation changes. */
 :root{--bg:#10121b;--bg2:#151823;--panel:#1a1d29;--panel2:#222635;--border:#303443;--muted:#9a9daf;--text:#eeedf5;--accent:#b6a2ec;--accent2:#b6a2ec;--good:#8bbfab;--warn:#d8b684;--bad:#ed9595;--gold:#e7c892;--shadow:0 16px 48px #06091220;font-family:Inter,Pretendard,'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-synthesis:none}

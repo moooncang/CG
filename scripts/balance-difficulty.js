@@ -4,7 +4,7 @@ import * as G from '../game.js';
 const clear=s=>{while(s.run.queue.length)G.act(s,{type:'choose',option:0});};
 for(const difficulty of G.data.DIFFICULTIES){const out=[];
 for(let seed=1;seed<=8;seed++){
- const s=G.act(G.initial(),{type:'newgame',name:'밸런스',background:'student',traits:['muse'],difficulty:difficulty.id,seed});const r=s.run;let n=0;
+ const init=G.initial();init.meta.unlocks.push('nightmare_unlock');const s=G.act(init,{type:'newgame',name:'밸런스',background:'student',traits:['muse'],difficulty:difficulty.id,seed});const r=s.run;let n=0;
  while(!r.ended){clear(s);
  if(r.money<400000&&r.energy>=30)G.act(s,{type:'job',id:'store'});
  if(r.inspiration<25&&r.energy>=15)G.act(s,{type:'life',id:'read'});
